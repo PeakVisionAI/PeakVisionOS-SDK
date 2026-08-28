@@ -1,0 +1,15 @@
+{
+  "name": "@peakvision/agentos-sdk",
+  "version": "1.5.0-alpha.1",
+  "description": "AgentOS remote control-plane SDK for TypeScript and Node.js",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": { "build": "tsc", "test": "npm run build" },
+  "license": "Apache-2.0",
+  "repository": { "type": "git", "url": "https://github.com/PeakVisionAI/AgentOS-SDK.git", "directory": "typescript" },
+  "engines": { "node": ">=18" },
+  "devDependencies": { "typescript": "^5.4.0" }
+}
