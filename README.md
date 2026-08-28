@@ -18,6 +18,17 @@ npm install @peakvision/agentos-sdk
 The packages contain client libraries only. The target machine must already
 run AgentOS services for local primitive or Gateway calls.
 
+The Python `GatewayClient` and TypeScript `AgentOS` clients cover the complete
+documented node control plane: health, agents, workspaces, tasks, runs (list,
+create, detail and stop), logs and event pages/iteration. `GatewayRegistryClient`
+(Python) and `RemoteGateway` (TypeScript) cover Gateway node listing,
+registration, token rotation and snapshots.
+
+The production baseline also includes bounded exponential retries, structured
+HTTP/local transport errors, input validation, idempotency-key support for
+retryable Run creation, typed TypeScript results, and a Python `py.typed`
+marker. These guarantees are covered by the repository contract tests.
+
 ## Choose a transport
 
 | Use case | Client | Transport | Stable operations |
@@ -68,3 +79,9 @@ versions together and run CI before tagging.
 
 See [standalone SDK release guide](docs/standalone-sdk.md) for credential,
 compatibility and ISV onboarding details.
+
+Release changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+
+This is an SDK client release, not a replacement for the AgentOS operating
+system. Remote primitive calls, offline command queues, multi-tenant RBAC and
+certificate lifecycle management remain server-side or future protocol work.
