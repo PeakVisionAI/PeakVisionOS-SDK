@@ -8,23 +8,30 @@ on:
 jobs:
   python:
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade build
       - run: PYTHONPATH=python python3 -m py_compile python/agentos/*.py
       - run: PYTHONPATH=python python3 tests/test-sdk-http.py
+      - run: PYTHONPATH=python python3 tests/test-local-client.py
       - run: python -m build python
 
   typescript:
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        node-version: ["18", "20"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: ${{ matrix.node-version }}
       - run: npm ci
         working-directory: typescript
       - run: npm test

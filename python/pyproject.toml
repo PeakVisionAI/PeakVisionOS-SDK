@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,10 +8,11 @@ version = "1.5.0a1"
 description = "AgentOS Python SDK —— 把感知/认知/记忆/语义文件原语封装成几行 Python API,面向 ISV 与 Agent 开发者"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "PeakVisionAI" }]
 keywords = ["agent", "agentos", "harness", "edge-ai"]
-classifiers = ["Development Status :: 3 - Alpha", "License :: OSI Approved :: Apache Software License", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
+classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
 
 [project.urls]
 Homepage = "https://github.com/PeakVisionAI/AgentOS-SDK"
@@ -23,3 +24,6 @@ agentos = "agentos.cli:main"
 
 [tool.setuptools]
 packages = ["agentos"]
+
+[tool.setuptools.package-data]
+agentos = ["py.typed"]

@@ -20,6 +20,17 @@ const run = await aos.createRun("demo");
 console.log(await aos.logs("demo"));
 ```
 
+The client includes bounded exponential retries for idempotent requests,
+explicit idempotency-key support for retryable `createRun` calls, typed
+Workspace/Task/Run/Event results, paged event reads and `iterEvents()`. It
+also covers the complete documented node control plane. Use `RemoteGateway`
+for Gateway node listing, registration, token rotation and snapshots.
+
 This first release covers health, Agents, Runs, Logs and Events through
 AgentOS `agentosd`/Gateway HTTP APIs. Four system primitives remain local Unix
 Socket APIs until a versioned remote primitive protocol is published.
+
+The client also covers Workspaces, Tasks, Run details, Gateway node registry
+operations, bounded retries, idempotency-key Run creation, typed event pages
+and async event iteration. Server-side RBAC, offline queues, certificate
+rotation and remote primitive transport are outside this package.

@@ -30,6 +30,10 @@ _SOCKS = {
 DEFAULT_TIMEOUT = 30.0
 
 
+class AgentOSClientError(RuntimeError):
+    """A local AgentOS Unix Socket request failed."""
+
+
 def _sock_path(key):
     env, default = _SOCKS[key]
     return os.environ.get(env, default)
@@ -45,21 +49,26 @@ def _call(key, line, timeout=DEFAULT_TIMEOUT, raw=False, body=None):
 
     raw=True 返回 bytes(用于 fs_get 裸字节);否则解析 JSON 返回 dict。
     """
+    if timeout <= 0:
+        raise ValueError("timeout must be greater than zero")
     s = socket.socket(socket.AF_UNIX)
     s.settimeout(timeout)
     try:
-        s.connect(_sock_path(key))
-        s.sendall(line.encode("utf-8") + b"\n")
-        if body is not None:
-            s.sendall(body)
-        s.shutdown(socket.SHUT_WR)
-        chunks = []
-        while True:
-            d = s.recv(65536)
-            if not d:
-                break
-            chunks.append(d)
-        data = b"".join(chunks)
+        try:
+            s.connect(_sock_path(key))
+            s.sendall(line.encode("utf-8") + b"\n")
+            if body is not None:
+                s.sendall(body)
+            s.shutdown(socket.SHUT_WR)
+            chunks = []
+            while True:
+                d = s.recv(65536)
+                if not d:
+                    break
+                chunks.append(d)
+            data = b"".join(chunks)
+        except (OSError, TimeoutError) as exc:
+            raise AgentOSClientError(f"local AgentOS request failed: {exc}") from exc
     finally:
         s.close()
     if raw:

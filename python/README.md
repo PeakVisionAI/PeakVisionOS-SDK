@@ -41,6 +41,15 @@ run = client.create_run(agent="my-agent", task_id="task-001")
 print(client.logs("my-agent"))
 ```
 
+生产客户端特性：
+
+- 对 GET/HEAD/OPTIONS 使用有上限的指数退避重试；POST 只有显式提供
+  `idempotency_key` 时才会重试。
+- `GatewayError.status` 和 `GatewayError.retryable` 提供可编程错误判定。
+- `events_page()` 返回游标页，`iter_events()` 按 `event_id` 增量读取，避免一次性加载全部事件。
+- `workspaces()`、`tasks()`、`run()` 覆盖控制面其余资源；Gateway 节点管理使用
+  `GatewayRegistryClient`。
+
 也可以通过 `AGENTOS_ENDPOINT` 和 `AGENTOS_TOKEN` 提供默认值。`GatewayClient`
 只覆盖远程控制面 HTTP API（health、agents、runs、logs、events）；四大系统原语
 仍通过目标节点本机 Unix Socket 访问，避免把尚未冻结的远程原语协议伪装成稳定接口。
@@ -133,3 +142,9 @@ socket 路径与 C 客户端一致,默认走 `/run/...`;本地开发/测试用 e
 - `agentos-sdk` `1.5.x` 对应 AgentOS Manifest v1、Harness Adapter v1 和 Control-plane HTTP v1。
 - 同一主版本内，新增字段和事件类型向后兼容；客户端必须忽略未知字段。
 - 需要远程调用四大原语时，等待 Remote Primitive Protocol 正式发布，不要直接依赖内部 Unix Socket 路径或未文档化 HTTP 路由。
+
+## 生产使用边界
+
+SDK 客户端已提供有上限的重试、幂等 Run 创建、结构化错误、输入校验和事件增量读取。
+真正上线仍需在 AgentOS Ubuntu 节点完成 TLS/mTLS、Token、Unix Socket 权限和 Run 生命周期
+验收；SDK 不负责替代服务端的多租户 RBAC、离线队列或证书轮换。

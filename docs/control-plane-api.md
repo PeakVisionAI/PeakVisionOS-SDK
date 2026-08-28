@@ -23,6 +23,10 @@
 | POST | /api/v1/runs/{id}/stop | 停止 Run |
 | GET | /api/v1/events | 事件列表 |
 
+SDK 映射：Python `GatewayClient` 与 TypeScript `AgentOS` 均覆盖上述所有端点；
+事件 API 额外提供分页读取和增量迭代封装。客户端不会绕过控制面直接访问 SQLite
+或 daemon 私有接口。
+
 ## 示例
 
 ~~~bash

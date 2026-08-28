@@ -11,12 +11,13 @@ socket 路径与 C 客户端一致,支持 env 覆盖(AGENTOS_*_SOCK)便于本地
     hits = aos.fs_search("第三季度营收")
     aos.agentrun_spawn("demo")
 """
-from .client import AgentOS, _call
+from .client import AgentOS, AgentOSClientError, _call
 from .harness import (AgentOSHarnessBridge, CancellationToken, EventRecorder, HarnessAdapter, HarnessResult,
                       RUN_STATUSES, STABLE_EVENT_TYPES, STABLE_TOOL_NAMES,
                       RetryPolicy, RunEvent, Task, ToolCall, load_recording, replay_recording)
 from .manifest import Manifest, load_manifest, parse_manifest_text, validate_manifest, validate_manifest_file
-from .http import GatewayClient, GatewayError
+from .http import (GatewayClient, GatewayError, GatewayRegistryClient,
+                   GatewayRetryPolicy, RemoteGatewayClient)
 
-__all__ = ["AgentOS", "_call", "GatewayClient", "GatewayError", "AgentOSHarnessBridge", "CancellationToken", "EventRecorder", "HarnessAdapter", "HarnessResult", "RUN_STATUSES", "STABLE_EVENT_TYPES", "STABLE_TOOL_NAMES", "RetryPolicy", "RunEvent", "Task", "ToolCall", "load_recording", "replay_recording", "Manifest", "load_manifest", "parse_manifest_text", "validate_manifest", "validate_manifest_file"]
+__all__ = ["AgentOS", "AgentOSClientError", "_call", "GatewayClient", "GatewayError", "GatewayRegistryClient", "RemoteGatewayClient", "GatewayRetryPolicy", "AgentOSHarnessBridge", "CancellationToken", "EventRecorder", "HarnessAdapter", "HarnessResult", "RUN_STATUSES", "STABLE_EVENT_TYPES", "STABLE_TOOL_NAMES", "RetryPolicy", "RunEvent", "Task", "ToolCall", "load_recording", "replay_recording", "Manifest", "load_manifest", "parse_manifest_text", "validate_manifest", "validate_manifest_file"]
 __version__ = "1.5.0a1"
