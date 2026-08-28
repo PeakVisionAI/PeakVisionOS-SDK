@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a Chinese developer quickstart covering macOS, Windows and Linux setup,
+  secure node connectivity, Python/TypeScript control-plane examples, Agent packaging,
+  local primitive usage and troubleshooting.
 - Added Apache-2.0 license files to the repository and both distributable packages.
 - Added complete documented control-plane client coverage: Workspaces, Tasks, Run detail,
   event pages/iteration, and Gateway node registry/snapshot operations.

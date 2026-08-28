@@ -1,5 +1,8 @@
 # @peakvision/agentos-sdk
 
+For workstation setup, SSH tunneling and an end-to-end Run example, see the
+[Chinese developer quickstart](../docs/developer-quickstart.zh-CN.md).
+
 TypeScript/Node.js client for the AgentOS remote control plane. Node.js 18+ is
 required because the package uses the built-in `fetch` implementation.
 

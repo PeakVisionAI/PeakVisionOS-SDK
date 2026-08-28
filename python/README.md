@@ -1,5 +1,8 @@
 # agentos —— AgentOS Python SDK
 
+第一次接入请先阅读[开发者快速开始](../docs/developer-quickstart.zh-CN.md)，其中包含
+macOS、Windows、Linux 环境准备、SSH 隧道、完整 Run 示例和 Agent 部署边界。
+
 把 AgentOS 的四大系统原语 + 运行时封装成几行 Python API,**零第三方依赖**(仅标准库)。
 面向 ISV 与 Agent 开发者:拿到峰瞰硬件 / 任何装了 AgentOS 的机器,`pip install` 即可开发。
 
