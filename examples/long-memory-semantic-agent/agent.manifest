@@ -1,0 +1,9 @@
+name=long-memory-semantic-agent
+exec=/usr/bin/python3 /etc/agent-os/agents/long-memory-semantic-agent/agent.py
+primitives=agent,infer,memory,fs
+memory_max=768M
+cpu_quota=100%
+autostart=no
+restart=on-failure
+sandbox=on
+network=loopback

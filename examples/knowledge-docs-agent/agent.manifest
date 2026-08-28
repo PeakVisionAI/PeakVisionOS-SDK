@@ -1,0 +1,9 @@
+name=knowledge-docs-agent
+exec=/usr/bin/python3 /etc/agent-os/agents/knowledge-docs-agent/agent.py
+primitives=agent,infer,fs
+memory_max=512M
+cpu_quota=100%
+autostart=no
+restart=on-failure
+sandbox=on
+network=loopback

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added four runnable Chinese Agent examples for local knowledge/document
+  processing, edge coding/design/office work, local-model industry tasks, and
+  long-term memory with semantic retrieval.
 - Added a Chinese DeepSeek Harness integration guide with the supported
   TypeScript control-plane plugin path, node-local primitive boundary, security
   requirements and acceptance checks.

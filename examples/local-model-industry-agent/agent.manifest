@@ -1,0 +1,9 @@
+name=local-model-industry-agent
+exec=/usr/bin/python3 /etc/agent-os/agents/local-model-industry-agent/agent.py
+primitives=agent,infer
+memory_max=512M
+cpu_quota=200%
+autostart=no
+restart=on-failure
+sandbox=on
+network=loopback

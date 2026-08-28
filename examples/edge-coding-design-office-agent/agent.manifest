@@ -1,0 +1,9 @@
+name=edge-coding-design-office-agent
+exec=/usr/bin/python3 /etc/agent-os/agents/edge-coding-design-office-agent/agent.py
+primitives=agent,infer,fs
+memory_max=768M
+cpu_quota=150%
+autostart=no
+restart=on-failure
+sandbox=on
+network=loopback

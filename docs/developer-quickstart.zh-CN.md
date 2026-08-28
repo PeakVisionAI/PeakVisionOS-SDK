@@ -416,6 +416,7 @@ python3 -c "import agentos; print(agentos.__file__, agentos.__version__)"
 
 更多协议细节：
 
+- [四个 AgentOS SDK 代码样例](agent-examples.zh-CN.md)
 - [控制面 HTTP API](control-plane-api.md)
 - [Remote Gateway](remote-gateway.md)
 - [Harness Adapter v1](harness-adapter-v1.md)

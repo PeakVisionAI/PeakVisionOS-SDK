@@ -3,6 +3,8 @@
 > 中文开发者入口：[AgentOS SDK 开发者快速开始](docs/developer-quickstart.zh-CN.md)
 >
 > Harness 接入：[DeepSeek Harness 接入 AgentOS SDK](docs/deepseek-harness-integration.zh-CN.md)
+>
+> 四个可运行样例：[AgentOS SDK Agent 样例](docs/agent-examples.zh-CN.md)
 
 AgentOS SDK lets an independent ISV build against an installed AgentOS node
 without cloning or installing the AgentOS daemon source tree. This repository
