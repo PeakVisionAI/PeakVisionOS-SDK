@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a Chinese DeepSeek Harness integration guide with the supported
+  TypeScript control-plane plugin path, node-local primitive boundary, security
+  requirements and acceptance checks.
 - Added a Chinese developer quickstart covering macOS, Windows and Linux setup,
   secure node connectivity, Python/TypeScript control-plane examples, Agent packaging,
   local primitive usage and troubleshooting.

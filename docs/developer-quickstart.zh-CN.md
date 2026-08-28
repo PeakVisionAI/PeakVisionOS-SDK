@@ -419,4 +419,5 @@ python3 -c "import agentos; print(agentos.__file__, agentos.__version__)"
 - [控制面 HTTP API](control-plane-api.md)
 - [Remote Gateway](remote-gateway.md)
 - [Harness Adapter v1](harness-adapter-v1.md)
+- [DeepSeek Harness 接入 AgentOS SDK](deepseek-harness-integration.zh-CN.md)
 - [独立 SDK 发布说明](standalone-sdk.md)

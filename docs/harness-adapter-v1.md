@@ -2,6 +2,10 @@
 
 Harness Adapter v1 将 DeepSeek Harness、LangGraph、自研 Harness 等规划层与 AgentOS 系统能力隔离。Python 参考接口位于 `agentos.harness`。
 
+注意：本页定义的是 AgentOS 的 Python Adapter Contract，不是 DeepSeek Harness 官方的
+TypeScript 插件 API。连接 DeepSeek 官方项目请阅读
+[DeepSeek Harness 接入 AgentOS SDK](deepseek-harness-integration.zh-CN.md)。
+
 稳定事件：
 
 ```text
