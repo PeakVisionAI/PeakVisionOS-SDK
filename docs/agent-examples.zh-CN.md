@@ -19,8 +19,8 @@ AgentOS 节点上的 agent.py
 在开发电脑安装 SDK：
 
 ```bash
-git clone https://github.com/PeakVisionAI/AgentOS-SDK.git
-cd AgentOS-SDK
+git clone https://github.com/PeakVisionAI/PeakVisionOS-SDK.git
+cd PeakVisionOS-SDK
 python3 -m venv .venv
 source .venv/bin/activate        # Windows PowerShell: .venv\\Scripts\\Activate.ps1
 python3 -m pip install -e ./python

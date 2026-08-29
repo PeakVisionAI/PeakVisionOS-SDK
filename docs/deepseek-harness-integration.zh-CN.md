@@ -37,7 +37,7 @@ flowchart LR
 
 - DeepSeek Harness 源码检出；官方插件教程目前要求从源码开发本地插件。
 - Node.js `22.19+` 或官方当前支持版本，以及 Corepack/pnpm。
-- 本机已克隆 `AgentOS-SDK`，并能完成 TypeScript SDK 构建。
+- 本机已克隆 `PeakVisionOS-SDK`，并能完成 TypeScript SDK 构建。
 - 一台已运行 AgentOS 控制面和至少一个 Agent 的 Ubuntu 节点。
 - 如控制面启用鉴权，需要管理员提供短期 Token。
 
@@ -45,7 +45,7 @@ flowchart LR
 
 ```text
 ~/work/
-├── AgentOS-SDK/
+├── PeakVisionOS-SDK/
 └── deepseek-harness/
 ```
 
@@ -77,7 +77,7 @@ Gateway，不要把无鉴权的控制面直接暴露到局域网或公网。
 先构建本地 AgentOS TypeScript SDK：
 
 ```bash
-cd ~/work/AgentOS-SDK/typescript
+cd ~/work/PeakVisionOS-SDK/typescript
 npm ci
 npm run build
 ```
@@ -94,7 +94,7 @@ pnpm run build
 把本地 SDK 链接到 DSH 工作区根目录：
 
 ```bash
-pnpm add -Dw ~/work/AgentOS-SDK/typescript
+pnpm add -Dw ~/work/PeakVisionOS-SDK/typescript
 ```
 
 PeakVisionOS SDK 正式发布到 NPM 后，可以改为：

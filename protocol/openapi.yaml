@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: Versioned control-plane contract used by pvos SDKs.
   contact:
-    url: https://github.com/PeakVisionAI/AgentOS-SDK/issues
+    url: https://github.com/PeakVisionAI/PeakVisionOS-SDK/issues
 servers:
   - url: https://gateway.example/gateway/v1/nodes/{node_id}/api/v1
     variables:

@@ -19,9 +19,9 @@ keywords = ["agent", "peakvisionos", "pvos", "agentos", "harness", "edge-ai"]
 classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
 
 [project.urls]
-Homepage = "https://github.com/PeakVisionAI/AgentOS-SDK"
-Documentation = "https://github.com/PeakVisionAI/AgentOS-SDK/tree/main/docs"
-Repository = "https://github.com/PeakVisionAI/AgentOS-SDK"
+Homepage = "https://github.com/PeakVisionAI/PeakVisionOS-SDK"
+Documentation = "https://github.com/PeakVisionAI/PeakVisionOS-SDK/tree/main/docs"
+Repository = "https://github.com/PeakVisionAI/PeakVisionOS-SDK"
 
 [project.scripts]
 pvos = "pvos.cli:main"

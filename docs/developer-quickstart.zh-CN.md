@@ -48,8 +48,8 @@ Windows PowerShell 可以使用 `python` 代替 `python3`。后续 Bash 示例�
 在 SDK 尚未正式发布到 PyPI/NPM，或需要最新源码时，使用源码安装：
 
 ```bash
-git clone https://github.com/PeakVisionAI/AgentOS-SDK.git
-cd AgentOS-SDK
+git clone https://github.com/PeakVisionAI/PeakVisionOS-SDK.git
+cd PeakVisionOS-SDK
 
 python3 -m venv .venv
 source .venv/bin/activate        # Windows PowerShell: .venv\Scripts\Activate.ps1
@@ -200,8 +200,8 @@ npm init -y
 # 正式发布后
 npm install @peakvision/pvos-sdk
 
-# 尚未发布时，改用本机 AgentOS-SDK/typescript 的实际路径
-npm install ../AgentOS-SDK/typescript
+# 尚未发布时，改用本机 PeakVisionOS-SDK/typescript 的实际路径
+npm install ../PeakVisionOS-SDK/typescript
 ```
 
 新建 `quickstart.mjs`：

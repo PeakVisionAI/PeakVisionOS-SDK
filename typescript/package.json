@@ -9,7 +9,7 @@
   "files": ["dist", "README.md", "LICENSE"],
   "scripts": { "build": "tsc", "test": "npm run build && node test/contract.mjs" },
   "license": "Apache-2.0",
-  "repository": { "type": "git", "url": "https://github.com/PeakVisionAI/AgentOS-SDK.git", "directory": "typescript" },
+  "repository": { "type": "git", "url": "https://github.com/PeakVisionAI/PeakVisionOS-SDK.git", "directory": "typescript" },
   "engines": { "node": ">=18" },
   "devDependencies": { "typescript": "^5.4.0" }
 }
