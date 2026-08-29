@@ -12,6 +12,15 @@
 [![CI](https://github.com/PeakVisionAI/PeakVisionOS-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
+[![GitHub stars](https://img.shields.io/github/stars/PeakVisionAI/PeakVisionOS-SDK?style=social)](https://github.com/PeakVisionAI/PeakVisionOS-SDK)
+[![GitHub forks](https://img.shields.io/github/forks/PeakVisionAI/PeakVisionOS-SDK?style=social)](https://github.com/PeakVisionAI/PeakVisionOS-SDK)
+[![PyPI Version](https://img.shields.io/pypi/v/peakvisionos-sdk)](https://pypi.org/project/peakvisionos-sdk/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/peakvisionos-sdk)](https://pypi.org/project/peakvisionos-sdk/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/peakvisionos-sdk)](https://pypistats.org/packages/peakvisionos-sdk)
+[![License](https://img.shields.io/github/license/PeakVisionAI/PeakVisionOS-SDK)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/blob/main/LICENSE)
+
+
+
 PeakVisionOS SDK 是面向端侧（桌面） Agent 的 Python 开发工具包和控制面客户端。它让开发者在自己的电脑上编写、测试和打包 Agent，再把 Agent 安装到运行 PeakVisionOS 的 Ubuntu 节点上，调用本地模型、记忆、语义文件和系统感知能力。
 
 PeakVisionOS SDK 不是一个新的大模型框架，也不是操作系统镜像。它连接 PeakVisionOS 提供的系统能力，并把本地 Unix Socket、Agent 运行时、Remote Gateway 和 Harness 工具契约封装成稳定的开发接口。
