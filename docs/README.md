@@ -7,6 +7,7 @@ Control-plane HTTP v1。
 
 | 目标 | 文档 |
 | --- | --- |
+| 在 VS Code 中开发 Agent | [PeakVisionOS Tools 扩展](../vscode/README.md) |
 | 5 分钟跑通 SDK | [开发者快速开始](developer-quickstart.zh-CN.md) |
 | 查看 Python/TS 方法 | [API 参考](api-reference.zh-CN.md) |
 | 没有节点也能开发 | [Mock 与验收](mock-and-acceptance.zh-CN.md) |

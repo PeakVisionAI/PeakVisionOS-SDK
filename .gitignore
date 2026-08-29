@@ -7,3 +7,7 @@ python/dist/
 python/*.egg-info/
 typescript/node_modules/
 typescript/dist/
+vscode/node_modules/
+vscode/dist/
+vscode/*.vsix
+vscode/.DS_Store

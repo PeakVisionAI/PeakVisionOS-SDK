@@ -147,6 +147,7 @@ SDK 保留 Harness 的上层编排自由度，同时把系统能力、权限、R
 
 ## 文档
 
+- [VS Code 扩展](vscode/README.md)
 - [Python SDK 参考](python/README.md)
 - [开发者快速开始](docs/developer-quickstart.zh-CN.md)
 - [四个 Agent 示例](examples/README.md)

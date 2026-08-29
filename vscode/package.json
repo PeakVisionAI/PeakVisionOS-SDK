@@ -1,0 +1,142 @@
+{
+  "name": "peakvisionos-vscode",
+  "displayName": "PeakVisionOS Tools",
+  "description": "Develop, validate, package, and verify PeakVisionOS Agents from VS Code.",
+  "version": "0.1.0",
+  "publisher": "PeakVisionAI",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PeakVisionAI/PeakVisionOS-SDK.git",
+    "directory": "vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "PeakVisionOS",
+    "AgentOS",
+    "agent",
+    "edge ai",
+    "harness"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "peakvisionos.doctor",
+        "title": "PeakVisionOS: Diagnose Local Node"
+      },
+      {
+        "command": "peakvisionos.newAgent",
+        "title": "PeakVisionOS: New Agent"
+      },
+      {
+        "command": "peakvisionos.inspectAgent",
+        "title": "PeakVisionOS: Inspect Agent"
+      },
+      {
+        "command": "peakvisionos.testAgent",
+        "title": "PeakVisionOS: Test Agent"
+      },
+      {
+        "command": "peakvisionos.packageAgent",
+        "title": "PeakVisionOS: Package Agent"
+      },
+      {
+        "command": "peakvisionos.acceptance",
+        "title": "PeakVisionOS: Run Gateway Acceptance"
+      },
+      {
+        "command": "peakvisionos.openSdkReadme",
+        "title": "PeakVisionOS: Open SDK Documentation"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "peakvisionos.doctor"
+        },
+        {
+          "command": "peakvisionos.newAgent"
+        },
+        {
+          "command": "peakvisionos.inspectAgent"
+        },
+        {
+          "command": "peakvisionos.testAgent"
+        },
+        {
+          "command": "peakvisionos.packageAgent"
+        },
+        {
+          "command": "peakvisionos.acceptance"
+        },
+        {
+          "command": "peakvisionos.openSdkReadme"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "peakvisionos.inspectAgent",
+          "when": "resourceFilename == agent.manifest",
+          "group": "peakvisionos"
+        },
+        {
+          "command": "peakvisionos.testAgent",
+          "when": "resourceFilename == agent.manifest",
+          "group": "peakvisionos"
+        },
+        {
+          "command": "peakvisionos.packageAgent",
+          "when": "resourceFilename == agent.manifest",
+          "group": "peakvisionos"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "PeakVisionOS",
+      "properties": {
+        "peakvisionos.pvosPath": {
+          "type": "string",
+          "default": "pvos",
+          "description": "Path to the pvos executable, or a command available on PATH."
+        },
+        "peakvisionos.gatewayEndpoint": {
+          "type": "string",
+          "default": "http://127.0.0.1:17680/api/v1",
+          "description": "Endpoint used by the Gateway acceptance command."
+        },
+        "peakvisionos.tokenEnvironmentVariable": {
+          "type": "string",
+          "default": "PVOS_TOKEN",
+          "description": "Environment variable containing the short-lived Gateway token."
+        },
+        "peakvisionos.packageOutputDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "Optional directory for generated .agent.tgz files. Empty uses the Agent directory."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node test/extension-contract.mjs",
+    "package": "npm run compile && vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.26.1",
+    "typescript": "^5.4.0"
+  }
+}
