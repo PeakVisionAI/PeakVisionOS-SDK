@@ -214,5 +214,3 @@ Mock 和合约测试证明 SDK 的请求、响应和工具链契约，不证明�
 
 Apache-2.0，详见 [LICENSE](LICENSE)。
 
-[![PyPI‑Monthly](https://img.shields.io/pypi/dm/peakvisionos‑sdk)](https://pepy.tech/project/peakvisionos‑sdk)
-
