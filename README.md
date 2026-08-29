@@ -11,14 +11,10 @@
 [![PyPI](https://img.shields.io/pypi/v/peakvisionos-sdk?label=PyPI)](https://pypi.org/project/peakvisionos-sdk/)
 [![CI](https://github.com/PeakVisionAI/PeakVisionOS-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-
-[![GitHub stars](https://img.shields.io/github/stars/PeakVisionAI/PeakVisionOS-SDK?style=social)](https://github.com/PeakVisionAI/PeakVisionOS-SDK)
-[![GitHub forks](https://img.shields.io/github/forks/PeakVisionAI/PeakVisionOS-SDK?style=social)](https://github.com/PeakVisionAI/PeakVisionOS-SDK)
-[![PyPI Version](https://img.shields.io/pypi/v/peakvisionos-sdk)](https://pypi.org/project/peakvisionos-sdk/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/peakvisionos-sdk)](https://pypi.org/project/peakvisionos-sdk/)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/peakvisionos-sdk)](https://pypistats.org/packages/peakvisionos-sdk)
-[![License](https://img.shields.io/github/license/PeakVisionAI/PeakVisionOS-SDK)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/blob/main/LICENSE)
-
+# Star、Fork、Watch
+[![GitHub stars](https://img.shields.io/github/stars/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/fork)
+[![GitHub watchers](https://img.shields.io/github/watchers/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/watchers)
 
 
 PeakVisionOS SDK 是面向端侧（桌面） Agent 的 Python 开发工具包和控制面客户端。它让开发者在自己的电脑上编写、测试和打包 Agent，再把 Agent 安装到运行 PeakVisionOS 的 Ubuntu 节点上，调用本地模型、记忆、语义文件和系统感知能力。
