@@ -19,6 +19,15 @@ STABLE_TOOL_NAMES = (
     "agent.system", "infer.chat", "infer.embed", "memory.write",
     "memory.recall", "fs.put", "fs.search",
 )
+STABLE_TOOL_SCHEMAS = {
+    "agent.system": {"required": (), "optional": ()},
+    "infer.chat": {"required": ("prompt",), "optional": ()},
+    "infer.embed": {"required": ("text",), "optional": ()},
+    "memory.write": {"required": ("text",), "optional": ()},
+    "memory.recall": {"required": ("query",), "optional": ("top_k",)},
+    "fs.put": {"required": ("name", "text"), "optional": ()},
+    "fs.search": {"required": ("query",), "optional": ("top_k",)},
+}
 
 @dataclass
 class Task:
@@ -32,6 +41,20 @@ class ToolCall:
     tool: str
     arguments: Dict[str, Any] = field(default_factory=dict)
     call_id: str = field(default_factory=lambda: "call-" + uuid.uuid4().hex[:12])
+    timeout_seconds: Optional[float] = None
+
+    def __post_init__(self):
+        if self.timeout_seconds is not None and self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be greater than zero")
+
+
+@dataclass(frozen=True)
+class ToolPolicy:
+    allowed_tools: tuple = STABLE_TOOL_NAMES
+    require_approval: tuple = ()
+
+    def allows(self, tool):
+        return tool in self.allowed_tools
 
 
 @dataclass(frozen=True)
@@ -72,6 +95,8 @@ class HarnessResult:
     output: Any = None
     events: list = field(default_factory=list)
     error: Optional[str] = None
+    error_code: Optional[str] = None
+    details: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         if self.status not in RUN_STATUSES:
@@ -147,24 +172,34 @@ class PeakVisionOSHarnessBridge:
 
     def _call_tool(self, call: ToolCall):
         args = call.arguments
-        table = {
-            "infer.chat": lambda: self.aos.chat(args["prompt"]),
-            "infer.embed": lambda: self.aos.embed(args["text"]),
-            "memory.write": lambda: self.aos.memory_write(args["text"]),
-            "memory.recall": lambda: self.aos.memory_recall(args["query"]),
-            "fs.put": lambda: self.aos.fs_put(args["name"], args["text"]),
-            "fs.search": lambda: self.aos.fs_search(args["query"]),
-            "agent.system": self.aos.system,
-        }
-        if call.tool not in table:
+        schema = STABLE_TOOL_SCHEMAS.get(call.tool)
+        if schema is None:
             raise ValueError("unsupported tool: " + call.tool)
+        missing = [name for name in schema["required"] if name not in args]
+        unknown = set(args) - set(schema["required"]) - set(schema["optional"])
+        if missing:
+            raise ValueError("missing tool arguments: " + ", ".join(missing))
+        if unknown:
+            raise ValueError("unknown tool arguments: " + ", ".join(sorted(unknown)))
+        timeout = call.timeout_seconds
+        kwargs = {"timeout": timeout} if timeout is not None else {}
+        table = {
+            "infer.chat": lambda: self.aos.chat(args["prompt"], **kwargs),
+            "infer.embed": lambda: self.aos.embed(args["text"], **kwargs),
+            "memory.write": lambda: self.aos.memory_write(args["text"], **kwargs),
+            "memory.recall": lambda: self.aos.memory_recall(args["query"], args.get("top_k", 5), **kwargs),
+            "fs.put": lambda: self.aos.fs_put(args["name"], args["text"], **kwargs),
+            "fs.search": lambda: self.aos.fs_search(args["query"], args.get("top_k", 5), **kwargs),
+            "agent.system": lambda: self.aos.system(**kwargs),
+        }
         return table[call.tool]()
 
     def run(self, task: Task, adapter: HarnessAdapter, context=None, retry_policy=None,
-            cancellation_token=None) -> HarnessResult:
+            cancellation_token=None, tool_policy=None, approval=None) -> HarnessResult:
         ctx = dict(context or {})
         retry = retry_policy or RetryPolicy()
         cancel = cancellation_token or CancellationToken()
+        policy = tool_policy or ToolPolicy()
         events = []
         self._event(events, RunEvent("run.started", task.task_id))
         outputs = []
@@ -173,6 +208,22 @@ class PeakVisionOSHarnessBridge:
                 if cancel.cancelled:
                     self._event(events, RunEvent("run.cancelled", task.task_id, {"reason": "cancel_requested"}))
                     return HarnessResult("cancelled", outputs[-1] if outputs else None, events, "cancel_requested")
+                if not policy.allows(call.tool):
+                    payload = {"call_id": call.call_id, "tool": call.tool,
+                               "code": "tool_not_allowed"}
+                    self._event(events, RunEvent("tool.failed", task.task_id, payload))
+                    self._event(events, RunEvent("run.failed", task.task_id, payload))
+                    return HarnessResult("failed", outputs[-1] if outputs else None, events,
+                                         "tool is not allowed", "tool_not_allowed", payload)
+                if call.tool in policy.require_approval:
+                    approved = bool(approval and approval(call, task, dict(ctx)))
+                    if not approved:
+                        payload = {"call_id": call.call_id, "tool": call.tool,
+                                   "code": "approval_required"}
+                        self._event(events, RunEvent("tool.failed", task.task_id, payload))
+                        self._event(events, RunEvent("run.failed", task.task_id, payload))
+                        return HarnessResult("failed", outputs[-1] if outputs else None, events,
+                                             "tool approval denied", "approval_required", payload)
                 output = None
                 for attempt in range(1, retry.max_attempts + 1):
                     if cancel.cancelled:

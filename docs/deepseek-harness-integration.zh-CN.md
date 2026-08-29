@@ -1,4 +1,4 @@
-# DeepSeek Harness 接入 AgentOS SDK
+# DeepSeek Harness 接入 PeakVisionOS SDK
 
 本文帮助开发者把 DeepSeek Harness（DSH）作为 Agent 的交互、规划和工具选择层，
 把 AgentOS 作为端侧运行、资源治理和系统能力层。完成后，开发者可以在 DSH Web UI
@@ -97,10 +97,10 @@ pnpm run build
 pnpm add -Dw ~/work/AgentOS-SDK/typescript
 ```
 
-AgentOS SDK 正式发布到 NPM 后，可以改为：
+PeakVisionOS SDK 正式发布到 NPM 后，可以改为：
 
 ```bash
-pnpm add -Dw @peakvision/peakvisionos-sdk
+pnpm add -Dw @peakvision/pvos-sdk
 ```
 
 ## 5. 创建 AgentOS 工具插件
@@ -119,7 +119,7 @@ scratch-agentos-plugin/
 ```ts
 import type { Context } from '@deepseek-ai/cordis'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import { AgentOS } from '@peakvision/peakvisionos-sdk'
+import { PeakVisionOS } from '@peakvision/pvos-sdk'
 
 export const name = 'agentos-tools'
 export const inject = ['tools']
@@ -129,7 +129,10 @@ function renderJson(value: string) {
 }
 
 export function apply(ctx: Context) {
-  const client = new AgentOS()
+  const client = new PeakVisionOS({
+    endpoint: process.env.PVOS_ENDPOINT,
+    token: process.env.PVOS_TOKEN,
+  })
 
   ctx.tools.register(defineTool({
     name: 'agentos_list_agents',
@@ -293,7 +296,7 @@ network=loopback
 ```
 
 创建和安装 Agent 的完整流程见
-[AgentOS SDK 开发者快速开始](developer-quickstart.zh-CN.md#7-创建自己的-agent)。
+[PeakVisionOS SDK 开发者快速开始](developer-quickstart.zh-CN.md#7-创建自己的-agent)。
 
 ## 8. 与 Python Harness Adapter v1 的关系
 
@@ -325,7 +328,8 @@ network=loopback
 ## 10. 当前限制
 
 - AgentOS TypeScript SDK 当前只开放远程控制面，不能从 DSH 进程远程直接调用四大原语。
-- SDK 的单次 HTTP 请求使用自身超时；当前方法还没有接收 DSH `AbortSignal` 的稳定接口。
+- TypeScript SDK 方法接受 `RequestOptions.signal`，DSH 取消时应把
+  `AbortSignal` 传给对应 SDK 调用；SDK 自身 timeout 仍作为硬上限。
   示例会在请求前检查取消，但不能中断已经发出的 SDK 请求。
 - DSH 工具输出暂以 JSON 字符串返回，以兼容当前 Developer Preview 的稳定标量输出模式；
   正式插件可在固定 DSH 版本后增加结构化对象 schema 和专用 UI 卡片。
@@ -335,7 +339,7 @@ network=loopback
 
 | 现象 | 排查方式 |
 | --- | --- |
-| DSH 启动时报找不到 `@peakvision/peakvisionos-sdk` | 先构建 SDK，再在 DSH 根目录执行 `pnpm add -Dw <SDK 的 typescript 目录>` |
+| DSH 启动时报找不到 `@peakvision/pvos-sdk` | 先构建 SDK，再在 DSH 根目录执行 `pnpm add -Dw <SDK 的 typescript 目录>` |
 | 插件没有加载 | 检查 `cordis.yml` 是否使用绝对插件路径，并执行 `pnpm dsh web --patch ...` |
 | `agentos_list_agents` 返回连接失败 | 检查 SSH 隧道、`AGENTOS_ENDPOINT` 和节点 `agentosd` |
 | HTTP 401 | Token 缺失、错误或已经轮换 |

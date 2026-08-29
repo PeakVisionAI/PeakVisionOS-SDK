@@ -3,6 +3,8 @@ info:
   title: PeakVisionOS Control Plane API
   version: 1.0.0
   description: Versioned control-plane contract used by pvos SDKs.
+  contact:
+    url: https://github.com/PeakVisionAI/AgentOS-SDK/issues
 servers:
   - url: https://gateway.example/gateway/v1/nodes/{node_id}/api/v1
     variables:
@@ -68,18 +70,105 @@ paths:
         - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 1000, default: 200 } }
       responses:
         '200': { description: Ordered events, content: { application/json: { schema: { type: object, required: [events, after], properties: { events: { type: array, items: { $ref: '#/components/schemas/RunEvent' } }, after: { type: integer } } } } } }
+  /nodes:
+    get:
+      summary: List registered AgentOS nodes
+      responses:
+        '200': { description: Nodes, content: { application/json: { schema: { type: object, required: [nodes], properties: { nodes: { type: array, items: { $ref: '#/components/schemas/GatewayNode' } } } } } } }
+    post:
+      summary: Register an AgentOS node
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/NodeCreate' } } } }
+      responses:
+        '201': { description: Registered node, content: { application/json: { schema: { $ref: '#/components/schemas/GatewayNode' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /nodes/{node_id}/token:
+    parameters: [{ $ref: '#/components/parameters/NodeId' }]
+    post:
+      summary: Rotate a node credential
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/TokenRotate' } } } }
+      responses:
+        '200': { description: Rotation result, content: { application/json: { schema: { type: object, properties: { node_id: { type: string }, rotated_at: { type: number } } } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /nodes/{node_id}/snapshot:
+    parameters: [{ $ref: '#/components/parameters/NodeId' }]
+    get:
+      summary: Read a node operational snapshot
+      responses:
+        '200': { description: Snapshot, content: { application/json: { schema: { $ref: '#/components/schemas/Snapshot' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer }
   parameters:
     AgentName: { in: path, name: name, required: true, schema: { type: string } }
     RunId: { in: path, name: run_id, required: true, schema: { type: string } }
+    NodeId: { in: path, name: node_id, required: true, schema: { type: string, pattern: '^[A-Za-z0-9_.:-]+$' } }
+  responses:
+    BadRequest:
+      description: Request validation failed
+      content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    NotFound:
+      description: Resource not found
+      content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    RateLimited:
+      description: Retryable rate limit
+      headers:
+        Retry-After: { schema: { type: number } }
+        X-Request-Id: { schema: { type: string } }
+      content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
   schemas:
     Health: { type: object, required: [ok], properties: { ok: { type: boolean }, service: { type: string }, version: { type: string } } }
-    Agent: { type: object, required: [name], properties: { name: { type: string }, status: { type: string }, primitives: { type: array, items: { type: string } } } }
+    Agent: { type: object, required: [name], properties: { name: { type: string }, status: { type: string, enum: [active, inactive, starting, stopped] }, primitives: { type: array, items: { type: string } } } }
     Workspace: { type: object, required: [workspace_id, name], properties: { workspace_id: { type: string }, name: { type: string }, created_at: { type: number } } }
     TaskCreate: { type: object, required: [workspace_id, title], properties: { workspace_id: { type: string }, title: { type: string }, description: { type: string }, agent: { type: string } } }
     Task: { allOf: [{ $ref: '#/components/schemas/TaskCreate' }, { type: object, required: [task_id, status], properties: { task_id: { type: string }, status: { type: string } } }] }
     RunCreate: { type: object, required: [agent], properties: { agent: { type: string }, task_id: { type: string }, workspace_id: { type: string }, manifest_digest: { type: string } } }
-    Run: { allOf: [{ $ref: '#/components/schemas/RunCreate' }, { type: object, required: [run_id, status], properties: { run_id: { type: string }, status: { type: string }, exit_code: { type: integer, nullable: true } } }] }
+    Run: { allOf: [{ $ref: '#/components/schemas/RunCreate' }, { type: object, required: [run_id, status], properties: { run_id: { type: string }, status: { type: string, enum: [created, queued, running, completed, failed, cancelled, stopped] }, exit_code: { type: integer, nullable: true } } }] }
     RunEvent: { type: object, required: [event_id, type, run_id, timestamp], properties: { event_id: { type: integer }, type: { type: string }, run_id: { type: string }, timestamp: { type: number }, payload: { type: object, additionalProperties: true } } }
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, example: unauthorized }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }
+            retry_after: { type: number, nullable: true }
+        request_id: { type: string }
+    NodeCreate:
+      type: object
+      required: [node_id, name, base_url, token]
+      properties:
+        node_id: { type: string }
+        name: { type: string }
+        base_url: { type: string, format: uri }
+        token: { type: string, writeOnly: true }
+        capabilities: { type: object, additionalProperties: true }
+    TokenRotate:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, writeOnly: true }
+    GatewayNode:
+      type: object
+      required: [node_id, name]
+      properties:
+        node_id: { type: string }
+        name: { type: string }
+        base_url: { type: string, format: uri }
+        online: { type: boolean }
+        capabilities: { type: object, additionalProperties: true }
+    Snapshot:
+      type: object
+      required: [health, agents, runs, events]
+      properties:
+        health: { $ref: '#/components/schemas/Health' }
+        agents: { type: array, items: { $ref: '#/components/schemas/Agent' } }
+        runs: { type: array, items: { $ref: '#/components/schemas/Run' } }
+        events: { type: array, items: { $ref: '#/components/schemas/RunEvent' } }

@@ -1,4 +1,4 @@
-# 四个 AgentOS SDK 代码样例
+# 四个 PeakVisionOS SDK 代码样例
 
 本文把 SDK 的四种典型用法写成可安装 Agent。每个样例都能在普通开发电脑上完成
 `inspect → test → package`，安装到 AgentOS Ubuntu 节点后由 `agentrund` 托管运行。
@@ -31,8 +31,8 @@ python3 -m pip install -e ./python
 
 ```bash
 cd examples/<sample-directory>
-agentos inspect .
-agentos test .
+pvos inspect .
+pvos test .
 pvos package . --output <sample-directory>.agent.tgz
 ```
 

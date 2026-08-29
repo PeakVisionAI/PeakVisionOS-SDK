@@ -1,20 +1,21 @@
-# PeakVisionOS SDK Protocols
+# PeakVisionOS 公共协议
 
-This directory records the public contracts shared by the standalone SDKs.
+这里是 Python、TypeScript 和服务端共同依赖的机器可读/可审查契约。
 
-| Contract | Version | Source of truth |
+| 协议 | 版本 | 规范 |
 | --- | --- | --- |
-| Manifest | v1 | [`../docs/manifest-v1.md`](../docs/manifest-v1.md) |
-| Harness Adapter | v1 | [`../docs/harness-adapter-v1.md`](../docs/harness-adapter-v1.md) |
-| Control-plane HTTP | v1 | [`../docs/control-plane-api.md`](../docs/control-plane-api.md) and [`openapi.yaml`](openapi.yaml) |
-| Run/Event types | v1 | [`../python/agentos/harness.py`](../python/agentos/harness.py) |
+| Agent Manifest | v1 | [`docs/manifest-v1.md`](../docs/manifest-v1.md) |
+| Harness Adapter | v1 | [`docs/harness-adapter-v1.md`](../docs/harness-adapter-v1.md) |
+| Control-plane HTTP | v1 | [`openapi.yaml`](openapi.yaml) 与 [`docs/control-plane-api.md`](../docs/control-plane-api.md) |
+| Run/Event | v1 | [`python/pvos/harness.py`](../python/pvos/harness.py) |
+| 本地原语 | v1 | AgentOS [`ARCHITECTURE.md`](https://github.com/PeakVisionAI/AgentOS/blob/main/ARCHITECTURE.md) |
 
-An SDK minor release may add optional fields and methods. Removing a field,
-changing status semantics or changing authentication requires a new protocol
-major version. SDK packages must never embed tokens, private keys or customer
-data.
+## 兼容规则
 
-The product name is PeakVisionOS and the new Python import is `pvos`. The
-former `agentos` import remains a compatibility alias during the 1.x migration
-window. The TypeScript package is `@peakvision/pvos-sdk`; new projects should
-use this name.
+小版本只能新增可选字段、工具和事件；客户端必须忽略未知字段。删除字段、
+改变状态含义、改变认证或改变 Unix Socket 行协议时，必须发布新的协议主版本。
+服务端错误统一为 `{error:{code,message,details?,retry_after?},request_id?}`。
+
+四大原语是 `agentd`、`inferd`、`memoryd`、`fsd`；`agentrund` 和 `ctxd` 是
+系统服务而不是原语。远程 Gateway 目前只承载控制面，不把内部原语协议伪装成
+稳定公网接口。

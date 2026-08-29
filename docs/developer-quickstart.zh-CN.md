@@ -1,6 +1,6 @@
-# AgentOS SDK 开发者快速开始
+# PeakVisionOS SDK 开发者快速开始
 
-本文帮助开发者在自己的 macOS、Windows 或 Linux 电脑上使用 AgentOS SDK 开发、
+本文帮助开发者在自己的 macOS、Windows 或 Linux 电脑上使用 PeakVisionOS SDK 开发、
 测试和打包 Agent。完成后你可以：
 
 - 在自己的 IDE 中编写 Agent，不需要在 AgentOS 源码仓库中开发。
@@ -65,14 +65,14 @@ cd ..
 
 ```bash
 python3 -m pip install peakvisionos-sdk
-npm install @peakvision/peakvisionos-sdk
+npm install @peakvision/pvos-sdk
 ```
 
 检查 Python SDK 和 CLI：
 
 ```bash
-python3 -c "import pvos; print(agentos.__version__)"
-agentos --help
+python3 -c "import pvos; print(pvos.__version__)"
+pvos --help
 ```
 
 ## 4. 从开发电脑连接 AgentOS 节点
@@ -124,7 +124,7 @@ $env:AGENTOS_AGENT_NAME = "my-agent"
 import os
 import time
 
-from agentos import GatewayClient, GatewayError
+from pvos import GatewayClient, GatewayError
 
 client = GatewayClient(
     endpoint=os.environ["AGENTOS_ENDPOINT"],
@@ -198,7 +198,7 @@ cd agentos-ts-demo
 npm init -y
 
 # 正式发布后
-npm install @peakvision/peakvisionos-sdk
+npm install @peakvision/pvos-sdk
 
 # 尚未发布时，改用本机 AgentOS-SDK/typescript 的实际路径
 npm install ../AgentOS-SDK/typescript
@@ -207,9 +207,9 @@ npm install ../AgentOS-SDK/typescript
 新建 `quickstart.mjs`：
 
 ```javascript
-import { AgentOS } from "@peakvision/peakvisionos-sdk";
+import { PeakVisionOS } from "@peakvision/pvos-sdk";
 
-const client = new AgentOS({
+const client = new PeakVisionOS({
   endpoint: process.env.AGENTOS_ENDPOINT,
   token: process.env.AGENTOS_TOKEN,
 });
@@ -268,8 +268,8 @@ node quickstart.mjs
 
 ```bash
 pvos new my-agent
-agentos inspect my-agent
-agentos test my-agent
+pvos inspect my-agent
+pvos test my-agent
 pvos package my-agent
 ```
 
@@ -283,7 +283,7 @@ my-agent/
 my-agent.agent.tgz
 ```
 
-`agentos test` 在开发电脑检查 Manifest 和 Python 语法，不要求本机有 GPU 或 AgentOS
+`pvos test` 在开发电脑检查 Manifest 和 Python 语法，不要求本机有 GPU 或 PeakVisionOS
 daemon。生成的默认 `agent.py` 会调用本机原语，所以完整运行必须在 AgentOS Ubuntu
 节点上进行。
 
@@ -335,7 +335,7 @@ agentrun status my-agent
 agentrun logs my-agent
 ```
 
-安装路径必须与 Manifest 的 `exec` 完全一致。每次安装前先执行 `agentos inspect`，
+安装路径必须与 Manifest 的 `exec` 完全一致。每次安装前先执行 `pvos inspect`，
 不要安装来源不明、摘要不匹配或包含 Token/私钥的包。
 
 ## 8. 在 AgentOS 节点调用四大原语
@@ -360,12 +360,12 @@ print(system, answer, memory, file_info, context)
 在节点上检查服务和权限：
 
 ```bash
-agentos doctor
+pvos doctor
 agentrun list
 inferctl status
 ```
 
-当 `agentos doctor` 中某个 Socket 不存在时，应修复对应 daemon 或 Manifest 授权，
+当 `pvos doctor` 中某个 Socket 不存在时，应修复对应 daemon 或 Manifest 授权，
 不要把 Socket 文件复制到开发电脑。
 
 ## 9. 测试与调试
@@ -389,7 +389,7 @@ curl -H "Authorization: Bearer $AGENTOS_TOKEN" \
   http://127.0.0.1:17680/api/v1/agents
 
 # SDK 是否来自当前虚拟环境
-python3 -c "import pvos; print(agentos.__file__, agentos.__version__)"
+python3 -c "import pvos; print(pvos.__file__, pvos.__version__)"
 ```
 
 ## 10. 常见问题
@@ -416,9 +416,9 @@ python3 -c "import pvos; print(agentos.__file__, agentos.__version__)"
 
 更多协议细节：
 
-- [四个 AgentOS SDK 代码样例](agent-examples.zh-CN.md)
+- [四个 PeakVisionOS SDK 代码样例](agent-examples.zh-CN.md)
 - [控制面 HTTP API](control-plane-api.md)
 - [Remote Gateway](remote-gateway.md)
 - [Harness Adapter v1](harness-adapter-v1.md)
-- [DeepSeek Harness 接入 AgentOS SDK](deepseek-harness-integration.zh-CN.md)
+- [DeepSeek Harness 接入 PeakVisionOS SDK](deepseek-harness-integration.zh-CN.md)
 - [独立 SDK 发布说明](standalone-sdk.md)

@@ -17,9 +17,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade build
-      - run: PYTHONPATH=python python3 -m py_compile python/agentos/*.py
+      - run: PYTHONPATH=python python3 -m py_compile python/pvos/*.py python/agentos/*.py
       - run: PYTHONPATH=python python3 tests/test-sdk-http.py
       - run: PYTHONPATH=python python3 tests/test-local-client.py
+      - run: PYTHONPATH=python python3 tests/test-pvos-toolchain.py
+      - run: PYTHONPATH=python python3 tests/test-harness.py
       - run: python -m build python
 
   typescript:

@@ -40,7 +40,7 @@ autostart=no
 restart=no
 """,
     "agent.py": """#!/usr/bin/env python3
-# {NAME} —— 由 `agentos new {NAME}` 生成的示例 Agent。
+# {NAME} —— 由 `pvos new {NAME}` 生成的示例 Agent。
 # 用 AgentOS SDK 调系统原语:感知 -> 认知 -> 记忆 -> 语义文件,跑 3 轮。
 # 运行:python3 {NAME}/agent.py(本地直接跑);或由 agentrund 托管(agentrun spawn {NAME})。
 import time
@@ -70,7 +70,7 @@ print(f"==== agent {NAME} 完成 3 轮,正常退出 ====")
 """,
     "README.md": """# {NAME}
 
-由 `agentos new {NAME}` 生成的示例 Agent。
+由 `pvos new {NAME}` 生成的示例 Agent。
 
 ## 本地直接跑(不需要 agentrund)
 
@@ -312,7 +312,7 @@ def cmd_acceptance(args):
 def cmd_install(args):
     from .package_manager import install_package
     try:
-        result = install_package(args.package, args.root)
+        result = install_package(args.package, args.root, expected_sha256=args.sha256)
     except Exception as exc:
         print(f"安装失败: {exc}", file=sys.stderr)
         return 1
@@ -334,7 +334,7 @@ def cmd_uninstall(args):
 def cmd_deploy(args):
     from .package_manager import deploy_package
     try:
-        commands = deploy_package(args.package, args.host, args.root, not args.no_sudo, args.dry_run)
+        commands = deploy_package(args.package, args.host, args.root, not args.no_sudo, args.dry_run, args.sdk_wheel)
     except Exception as exc:
         print(f"部署失败: {exc}", file=sys.stderr)
         return 1
@@ -403,6 +403,7 @@ def main(argv=None):
     p = sub.add_parser("install", help="在本机 AgentOS 节点原子安装 Agent 包")
     p.add_argument("package")
     p.add_argument("--root", default="/etc/agent-os/agents")
+    p.add_argument("--sha256", help="校验 Agent 包 SHA-256 摘要")
     p.set_defaults(func=cmd_install)
     p = sub.add_parser("uninstall", help="卸载本机 Agent 包")
     p.add_argument("name")
@@ -414,6 +415,7 @@ def main(argv=None):
     p.add_argument("--root", default="/etc/agent-os/agents")
     p.add_argument("--no-sudo", action="store_true")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--sdk-wheel", help="目标机未安装 SDK 时，先上传并安装本地 .whl")
     p.set_defaults(func=cmd_deploy)
     a = ap.parse_args(argv)
     result = a.func(a)

@@ -29,9 +29,26 @@ const registry = new RemoteGateway({ endpoint: "http://127.0.0.1/gateway/v1", to
 assert.equal((await registry.nodes())[0].node_id, "node-1");
 
 try {
-  await new AgentOS({ endpoint: "http://127.0.0.1/api/v1", fetch: async () => new Response("bad", { status: 401 }) }).health();
+  await new AgentOS({
+    endpoint: "http://127.0.0.1/api/v1",
+    fetch: async () => new Response(JSON.stringify({ error: { code: "unauthorized", message: "invalid token", details: { scope: "runs:read" } } }), { status: 401, headers: { "X-Request-Id": "req-ts" } }),
+  }).health();
 } catch (error) {
   assert.ok(error instanceof GatewayError);
+  assert.equal(error.code, "unauthorized");
+  assert.equal(error.message, "invalid token");
+  assert.equal(error.requestId, "req-ts");
+  assert.deepEqual(error.details, { scope: "runs:read" });
 }
+
+const controller = new AbortController();
+controller.abort();
+await assert.rejects(
+  new AgentOS({ endpoint: "http://127.0.0.1/api/v1", fetch: (_url, init) => new Promise((_resolve, reject) => {
+    if (init.signal.aborted) reject(new Error("aborted"));
+    else init.signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+  }) }).health({ signal: controller.signal }),
+  (error) => error instanceof GatewayError && error.code === "aborted",
+);
 
 console.log("TypeScript SDK contract: OK");
