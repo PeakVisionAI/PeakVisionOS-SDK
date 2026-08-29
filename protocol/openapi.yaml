@@ -1,0 +1,85 @@
+openapi: 3.0.3
+info:
+  title: PeakVisionOS Control Plane API
+  version: 1.0.0
+  description: Versioned control-plane contract used by pvos SDKs.
+servers:
+  - url: https://gateway.example/gateway/v1/nodes/{node_id}/api/v1
+    variables:
+      node_id: { default: node-1 }
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      responses:
+        '200': { description: Health, content: { application/json: { schema: { $ref: '#/components/schemas/Health' } } } }
+  /agents:
+    get:
+      responses:
+        '200': { description: Agents, content: { application/json: { schema: { type: object, properties: { agents: { type: array, items: { $ref: '#/components/schemas/Agent' } } } } } } }
+  /agents/{name}/logs:
+    parameters: [{ $ref: '#/components/parameters/AgentName' }]
+    get:
+      responses:
+        '200': { description: Logs, content: { application/json: { schema: { type: object, properties: { agent: { type: string }, logs: { type: string } } } } } }
+  /workspaces:
+    get:
+      responses:
+        '200': { description: Workspaces, content: { application/json: { schema: { type: object, properties: { workspaces: { type: array, items: { $ref: '#/components/schemas/Workspace' } } } } } } }
+    post:
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [name], properties: { name: { type: string, minLength: 1 } } } } } }
+      responses:
+        '201': { description: Workspace, content: { application/json: { schema: { $ref: '#/components/schemas/Workspace' } } } }
+  /tasks:
+    get:
+      parameters: [{ in: query, name: workspace_id, schema: { type: string } }]
+      responses:
+        '200': { description: Tasks, content: { application/json: { schema: { type: object, properties: { tasks: { type: array, items: { $ref: '#/components/schemas/Task' } } } } } } }
+    post:
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/TaskCreate' } } } }
+      responses:
+        '201': { description: Task, content: { application/json: { schema: { $ref: '#/components/schemas/Task' } } } }
+  /runs:
+    get:
+      parameters: [{ in: query, name: workspace_id, schema: { type: string } }]
+      responses:
+        '200': { description: Runs, content: { application/json: { schema: { type: object, properties: { runs: { type: array, items: { $ref: '#/components/schemas/Run' } } } } } } }
+    post:
+      parameters: [{ in: header, name: Idempotency-Key, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RunCreate' } } } }
+      responses:
+        '201': { description: Run, content: { application/json: { schema: { $ref: '#/components/schemas/Run' } } } }
+  /runs/{run_id}:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    get:
+      responses:
+        '200': { description: Run detail, content: { application/json: { schema: { $ref: '#/components/schemas/Run' } } } }
+  /runs/{run_id}/stop:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    post:
+      responses:
+        '200': { description: Stopped run, content: { application/json: { schema: { $ref: '#/components/schemas/Run' } } } }
+  /events:
+    get:
+      parameters:
+        - { in: query, name: after, schema: { type: integer, minimum: 0, default: 0 } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 1000, default: 200 } }
+      responses:
+        '200': { description: Ordered events, content: { application/json: { schema: { type: object, required: [events, after], properties: { events: { type: array, items: { $ref: '#/components/schemas/RunEvent' } }, after: { type: integer } } } } } }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer }
+  parameters:
+    AgentName: { in: path, name: name, required: true, schema: { type: string } }
+    RunId: { in: path, name: run_id, required: true, schema: { type: string } }
+  schemas:
+    Health: { type: object, required: [ok], properties: { ok: { type: boolean }, service: { type: string }, version: { type: string } } }
+    Agent: { type: object, required: [name], properties: { name: { type: string }, status: { type: string }, primitives: { type: array, items: { type: string } } } }
+    Workspace: { type: object, required: [workspace_id, name], properties: { workspace_id: { type: string }, name: { type: string }, created_at: { type: number } } }
+    TaskCreate: { type: object, required: [workspace_id, title], properties: { workspace_id: { type: string }, title: { type: string }, description: { type: string }, agent: { type: string } } }
+    Task: { allOf: [{ $ref: '#/components/schemas/TaskCreate' }, { type: object, required: [task_id, status], properties: { task_id: { type: string }, status: { type: string } } }] }
+    RunCreate: { type: object, required: [agent], properties: { agent: { type: string }, task_id: { type: string }, workspace_id: { type: string }, manifest_digest: { type: string } } }
+    Run: { allOf: [{ $ref: '#/components/schemas/RunCreate' }, { type: object, required: [run_id, status], properties: { run_id: { type: string }, status: { type: string }, exit_code: { type: integer, nullable: true } } }] }
+    RunEvent: { type: object, required: [event_id, type, run_id, timestamp], properties: { event_id: { type: integer }, type: { type: string }, run_id: { type: string }, timestamp: { type: number }, payload: { type: object, additionalProperties: true } } }

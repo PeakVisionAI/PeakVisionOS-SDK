@@ -3,7 +3,7 @@
 import json
 import os
 
-import agentos
+import pvos
 
 
 def response_text(value):
@@ -16,7 +16,7 @@ def main():
     industry = os.environ.get("AGENT_INDUSTRY", "船舶设计")
     task = os.environ.get("AGENT_TASK", "检查设计变更中的关键风险，并给出复核清单")
     model = os.environ.get("AGENT_MODEL", "")
-    aos = agentos.AgentOS(caller="local-model-industry-agent")
+    aos = pvos.PeakVisionOS(caller="local-model-industry-agent")
     hardware = aos.hwinfo()
     models = aos.models()
     loaded = None

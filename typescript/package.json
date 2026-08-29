@@ -1,7 +1,7 @@
 {
-  "name": "@peakvision/agentos-sdk",
+  "name": "@peakvision/pvos-sdk",
   "version": "1.5.0-alpha.1",
-  "description": "AgentOS remote control-plane SDK for TypeScript and Node.js",
+  "description": "PeakVisionOS remote control-plane SDK for TypeScript and Node.js",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

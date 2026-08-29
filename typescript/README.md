@@ -1,21 +1,21 @@
-# @peakvision/agentos-sdk
+# @peakvision/pvos-sdk
 
 For workstation setup, SSH tunneling and an end-to-end Run example, see the
 [Chinese developer quickstart](../docs/developer-quickstart.zh-CN.md).
 
-TypeScript/Node.js client for the AgentOS remote control plane. Node.js 18+ is
+TypeScript/Node.js client for the PeakVisionOS remote control plane. Node.js 18+ is
 required because the package uses the built-in `fetch` implementation.
 
 ```bash
-npm install @peakvision/agentos-sdk
+npm install @peakvision/pvos-sdk
 ```
 
 ```ts
-import { AgentOS } from "@peakvision/agentos-sdk";
+import { PeakVisionOS } from "@peakvision/pvos-sdk";
 
-const aos = new AgentOS({
+const aos = new PeakVisionOS({
   endpoint: "https://gateway.example/gateway/v1/nodes/node-1/api/v1",
-  token: process.env.AGENTOS_TOKEN,
+  token: process.env.PVOS_TOKEN,
 });
 
 console.log(await aos.health());

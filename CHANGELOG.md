@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Renamed the new public product surface to PeakVisionOS: `peakvisionos-sdk`,
+  `pvos`, and `@peakvision/pvos-sdk`; legacy `agentos` imports/CLI remain aliases.
+- Added a local control-plane mock server, repeatable acceptance command, atomic
+  Agent package install/deploy/uninstall helpers, OpenAPI v1, API reference and
+  developer environment guide.
+- Added error/state-machine, security, testing, compatibility, migration, FAQ and
+  community governance documents.
+
 - Added four runnable Chinese Agent examples for local knowledge/document
   processing, edge coding/design/office work, local-model industry tasks, and
   long-term memory with semantic retrieval.

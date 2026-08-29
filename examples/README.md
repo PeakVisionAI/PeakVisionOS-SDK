@@ -1,6 +1,6 @@
 # AgentOS SDK Agent 示例
 
-这些示例是四个可以用 `agentos package` 打包、安装到 AgentOS Ubuntu 节点并由
+这些示例是四个可以用 `pvos package` 打包、安装到 AgentOS Ubuntu 节点并由
 `agentrund` 托管运行的最小 Agent。它们不是模拟服务：代码使用 Python SDK 的真实
 Unix Socket API，模型和数据仍由节点上的 AgentOS 服务提供。
 
@@ -11,7 +11,7 @@ Unix Socket API，模型和数据仍由节点上的 AgentOS 服务提供。
 ```bash
 agentos inspect .
 agentos test .
-agentos package . --output my-agent.agent.tgz
+pvos package . --output my-agent.agent.tgz
 ```
 
 然后按照[开发者快速开始](../docs/developer-quickstart.zh-CN.md#7-创建自己的-agent)

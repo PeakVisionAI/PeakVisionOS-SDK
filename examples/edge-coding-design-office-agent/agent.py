@@ -4,7 +4,7 @@ import json
 import os
 import re
 
-import agentos
+import pvos
 
 
 def response_text(value):
@@ -20,7 +20,7 @@ def safe_name(value):
 def main():
     task = os.environ.get("AGENT_TASK", "为一个库存管理页面设计清晰的接口和验收标准")
     mode = os.environ.get("AGENT_MODE", "office")
-    aos = agentos.AgentOS(caller="edge-coding-design-office-agent")
+    aos = pvos.PeakVisionOS(caller="edge-coding-design-office-agent")
     system = aos.system()
     context = aos.ctx_assemble(
         7000,

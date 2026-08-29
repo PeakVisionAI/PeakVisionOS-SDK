@@ -74,7 +74,7 @@ function environment(name: string): string | undefined {
   return runtime.process?.env?.[name];
 }
 
-/** Remote AgentOS control-plane client. Primitive calls remain local-only. */
+/** Remote PeakVisionOS control-plane client. Primitive calls remain local-only. */
 export class AgentOS {
   private readonly endpoint: string;
   private readonly token: string;
@@ -83,12 +83,12 @@ export class AgentOS {
   private readonly retry: Required<RetryOptions>;
 
   constructor(options: AgentOSOptions = {}) {
-    const endpoint = options.endpoint ?? environment("AGENTOS_ENDPOINT");
+    const endpoint = options.endpoint ?? environment("PVOS_ENDPOINT") ?? environment("AGENTOS_ENDPOINT");
     if (!endpoint || !/^https?:\/\//.test(endpoint)) {
       throw new TypeError("endpoint must use http:// or https://");
     }
     this.endpoint = endpoint.replace(/\/$/, "");
-    this.token = options.token ?? environment("AGENTOS_TOKEN") ?? "";
+    this.token = options.token ?? environment("PVOS_TOKEN") ?? environment("AGENTOS_TOKEN") ?? "";
     this.timeoutMs = options.timeoutMs ?? 15000;
     this.fetcher = options.fetch ?? globalThis.fetch;
     if (!this.fetcher) throw new TypeError("fetch is required (use Node 18+ or pass options.fetch)");
@@ -200,6 +200,9 @@ export class AgentOS {
     }
   }
 }
+
+/** Product-named alias. Existing AgentOS imports remain compatible. */
+export class PeakVisionOS extends AgentOS {}
 
 /** Gateway registry client for node management and snapshots. */
 export class RemoteGateway extends AgentOS {

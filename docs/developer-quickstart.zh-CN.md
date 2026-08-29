@@ -12,7 +12,7 @@
 | 开发位置 | SDK 客户端 | 连接方式 | 能力 |
 | --- | --- | --- | --- |
 | macOS、Windows、普通 Linux 开发电脑 | Python `GatewayClient` / TypeScript `AgentOS` | HTTP/HTTPS | Agent、Workspace、Task、Run、日志、事件 |
-| 安装了 AgentOS 的 Ubuntu 节点 | Python `agentos.AgentOS` | 本机 Unix Socket | 感知、推理、记忆、语义文件、上下文和运行时 |
+| 安装了 AgentOS 的 Ubuntu 节点 | Python `pvos.PeakVisionOS` | 本机 Unix Socket | 感知、推理、记忆、语义文件、上下文和运行时 |
 
 四大系统原语目前只允许在 AgentOS 节点本机访问。开发电脑不能把 Unix Socket
 路径指向远程机器。推荐流程是：**本地 IDE 写代码和管理 Run，Agent 包在 Ubuntu
@@ -64,14 +64,14 @@ cd ..
 正式包发布后可以直接安装：
 
 ```bash
-python3 -m pip install agentos-sdk
-npm install @peakvision/agentos-sdk
+python3 -m pip install peakvisionos-sdk
+npm install @peakvision/peakvisionos-sdk
 ```
 
 检查 Python SDK 和 CLI：
 
 ```bash
-python3 -c "import agentos; print(agentos.__version__)"
+python3 -c "import pvos; print(agentos.__version__)"
 agentos --help
 ```
 
@@ -198,7 +198,7 @@ cd agentos-ts-demo
 npm init -y
 
 # 正式发布后
-npm install @peakvision/agentos-sdk
+npm install @peakvision/peakvisionos-sdk
 
 # 尚未发布时，改用本机 AgentOS-SDK/typescript 的实际路径
 npm install ../AgentOS-SDK/typescript
@@ -207,7 +207,7 @@ npm install ../AgentOS-SDK/typescript
 新建 `quickstart.mjs`：
 
 ```javascript
-import { AgentOS } from "@peakvision/agentos-sdk";
+import { AgentOS } from "@peakvision/peakvisionos-sdk";
 
 const client = new AgentOS({
   endpoint: process.env.AGENTOS_ENDPOINT,
@@ -267,10 +267,10 @@ node quickstart.mjs
 在开发电脑的项目目录执行：
 
 ```bash
-agentos new my-agent
+pvos new my-agent
 agentos inspect my-agent
 agentos test my-agent
-agentos package my-agent
+pvos package my-agent
 ```
 
 生成内容：
@@ -340,12 +340,12 @@ agentrun logs my-agent
 
 ## 8. 在 AgentOS 节点调用四大原语
 
-Agent 进入 Ubuntu 节点后，使用 `agentos.AgentOS`：
+Agent 进入 Ubuntu 节点后，使用 `pvos.PeakVisionOS`：
 
 ```python
-import agentos
+import pvos
 
-aos = agentos.AgentOS(caller="my-agent")
+aos = pvos.PeakVisionOS(caller="my-agent")
 
 system = aos.system()
 answer = aos.chat("根据当前系统状态给出一句建议")
@@ -389,7 +389,7 @@ curl -H "Authorization: Bearer $AGENTOS_TOKEN" \
   http://127.0.0.1:17680/api/v1/agents
 
 # SDK 是否来自当前虚拟环境
-python3 -c "import agentos; print(agentos.__file__, agentos.__version__)"
+python3 -c "import pvos; print(agentos.__file__, agentos.__version__)"
 ```
 
 ## 10. 常见问题

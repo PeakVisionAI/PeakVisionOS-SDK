@@ -4,7 +4,7 @@ import json
 import os
 import time
 
-import agentos
+import pvos
 
 
 def response_text(value):
@@ -16,7 +16,7 @@ def response_text(value):
 def main():
     user_input = os.environ.get("AGENT_INPUT", "客户偏好周报用中文，并要求先列风险再列行动项")
     query = os.environ.get("AGENT_QUERY", "客户有哪些偏好和待办要求？")
-    aos = agentos.AgentOS(caller="long-memory-semantic-agent")
+    aos = pvos.PeakVisionOS(caller="long-memory-semantic-agent")
     memory_text = f"{time.strftime('%Y-%m-%d')} 任务事实：{user_input}"
     written = aos.memory_write(memory_text)
     file_name = "memory-note-" + str(int(time.time())) + ".txt"

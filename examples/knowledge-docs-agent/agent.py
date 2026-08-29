@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 
-import agentos
+import pvos
 
 
 def response_text(value):
@@ -31,7 +31,7 @@ def main():
     if not documents:
         raise SystemExit("没有找到文档；设置 AGENT_DOCUMENT_DIR 或 AGENT_DOCUMENT_TEXT")
 
-    aos = agentos.AgentOS(caller="knowledge-docs-agent")
+    aos = pvos.PeakVisionOS(caller="knowledge-docs-agent")
     stored = []
     for name, text in documents:
         stored.append({"name": name, "result": aos.fs_put(name, text)})
