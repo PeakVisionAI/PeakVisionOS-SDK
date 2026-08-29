@@ -14,7 +14,6 @@
 [![GitHub stars](https://img.shields.io/github/stars/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/fork)
 [![GitHub watchers](https://img.shields.io/github/watchers/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/watchers)
-
 [![PyPI‑Monthly](https://img.shields.io/pypi/dm/peakvisionos-sdk)](https://pepy.tech/project/peakvisionos-sdk)
 
 
