@@ -1,4 +1,12 @@
-# PeakVisionOS SDK
+<p align="center">
+  <img src="assets/peakvision-logo.jpg" alt="PeakVision.AI logo" width="360">
+</p>
+
+<h1 align="center">PeakVisionOS SDK</h1>
+
+<p align="center">
+  面向端侧智能体的本地开发工具包与控制面客户端
+</p>
 
 [![PyPI](https://img.shields.io/pypi/v/peakvisionos-sdk?label=PyPI)](https://pypi.org/project/peakvisionos-sdk/)
 [![CI](https://github.com/PeakVisionAI/PeakVisionOS-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/actions/workflows/ci.yml)
