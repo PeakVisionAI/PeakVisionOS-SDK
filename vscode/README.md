@@ -17,6 +17,15 @@ PeakVisionOS Tools is a VS Code extension for developing Agents with the PeakVis
 - Python 3.8+ with the `peakvisionos-sdk` package installed, or a development checkout exposing the `pvos` command.
 - A running PeakVisionOS node is only required for real socket or Gateway operations. Agent syntax, Manifest and packaging checks work on a development computer without a GPU.
 
+## Download from GitHub
+
+The current pre-release VSIX is available from the GitHub Release page:
+
+- [Download `peakvisionos-vscode-0.1.0.vsix`](https://github.com/PeakVisionAI/PeakVisionOS-SDK/releases/download/vscode-v0.1.0/peakvisionos-vscode-0.1.0.vsix)
+- [View all VS Code releases](https://github.com/PeakVisionAI/PeakVisionOS-SDK/releases?q=vscode)
+
+In VS Code, open the Command Palette and choose **Extensions: Install from VSIX...**, then select the downloaded file.
+
 Install the SDK first:
 
 ```bash
@@ -24,7 +33,7 @@ python -m pip install peakvisionos-sdk
 pvos --help
 ```
 
-## Install the extension from source
+## Build the extension from source
 
 ```bash
 cd vscode
@@ -34,6 +43,8 @@ npm run package
 ```
 
 Then open the generated `.vsix` file in VS Code with **Extensions: Install from VSIX...**.
+
+The GitHub workflow rebuilds this VSIX and attaches it to a release whenever a `vscode-v*` tag is pushed.
 
 ## Commands
 

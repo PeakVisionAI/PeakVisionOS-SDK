@@ -162,6 +162,26 @@ SDK 保留 Harness 的上层编排自由度，同时把系统能力、权限、R
 - [兼容矩阵](docs/compatibility-matrix.zh-CN.md)
 - [支持与弃用政策](docs/support-and-deprecation.zh-CN.md)
 
+## VS Code 开发入口
+
+PeakVisionOS 提供 VS Code 专用开发入口，用于在熟悉的编辑器中创建、检查、测试和打包 Agent。扩展通过 `pvos` CLI 调用 SDK，不复制协议和运行时逻辑。
+
+### 下载并安装
+
+当前版本：`vscode-v0.1.0`。
+
+- [下载 VSIX 安装包](https://github.com/PeakVisionAI/PeakVisionOS-SDK/releases/download/vscode-v0.1.0/peakvisionos-vscode-0.1.0.vsix)
+- [查看所有 VS Code Releases](https://github.com/PeakVisionAI/PeakVisionOS-SDK/releases?q=vscode)
+
+在 VS Code 中打开命令面板，选择 `Extensions: Install from VSIX...`，再选择下载的 `.vsix` 文件。安装前先在本机安装 Python SDK：
+
+```bash
+python -m pip install peakvisionos-sdk
+pvos --help
+```
+
+安装扩展后，在命令面板搜索 `PeakVisionOS`，即可使用 `New Agent`、`Inspect Agent`、`Test Agent`、`Package Agent`、`Diagnose Local Node` 和 `Run Gateway Acceptance`。完整配置和使用说明见 [VS Code 扩展文档](vscode/README.md)。
+
 ## 本地开发与验证
 
 仓库不要求开发机有 GPU。安装开发依赖后运行：
