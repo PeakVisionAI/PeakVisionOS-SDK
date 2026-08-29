@@ -11,7 +11,6 @@
 [![PyPI](https://img.shields.io/pypi/v/peakvisionos-sdk?label=PyPI)](https://pypi.org/project/peakvisionos-sdk/)
 [![CI](https://github.com/PeakVisionAI/PeakVisionOS-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-# Star、Fork、Watch
 [![GitHub stars](https://img.shields.io/github/stars/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/fork)
 [![GitHub watchers](https://img.shields.io/github/watchers/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/watchers)
