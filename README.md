@@ -15,6 +15,9 @@
 [![GitHub forks](https://img.shields.io/github/forks/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/fork)
 [![GitHub watchers](https://img.shields.io/github/watchers/PeakVisionAI/PeakVisionOS-SDK?style=flat-square&logo=github)](https://github.com/PeakVisionAI/PeakVisionOS-SDK/watchers)
 
+[![PyPI‑Monthly](https://img.shields.io/pypi/dm/peakvisionos-sdk)](https://pepy.tech/project/peakvisionos-sdk)
+
+
 
 PeakVisionOS SDK 是面向端侧（桌面） Agent 的 Python 开发工具包和控制面客户端。它让开发者在自己的电脑上编写、测试和打包 Agent，再把 Agent 安装到运行 PeakVisionOS 的 Ubuntu 节点上，调用本地模型、记忆、语义文件和系统感知能力。
 
@@ -214,3 +217,5 @@ Mock 和合约测试证明 SDK 的请求、响应和工具链契约，不证明�
 ## 许可证
 
 Apache-2.0，详见 [LICENSE](LICENSE)。
+
+[![Star History Chart](https://api.star-history.com/svg?repos=PeakVisionAI/PeakVisionOS-SDK&type=Date)](https://star-history.com/#PeakVisionAI/PeakVisionOS‑SDK&Date)
