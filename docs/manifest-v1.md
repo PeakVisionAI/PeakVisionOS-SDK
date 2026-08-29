@@ -18,4 +18,4 @@ Manifest v1 是 Agent 与 `agentrund` 的稳定部署合同。文件扩展名为
 
 兼容规则：v1 内新增字段必须有安全默认值；删除、改名或改变已有字段语义需要新的 Manifest 主版本。
 
-Python SDK 提供 `agentos.inspect` 对应的 `parse_manifest_text()` / `validate_manifest_file()`；`agentos test` 和 `agentos package` 在执行语法检查或打包前强制使用同一校验器。未知字段会出现在 `Manifest.unknown`，但不影响 v1 Agent 运行。
+Python SDK 提供 `pvos inspect` 对应的 `parse_manifest_text()` / `validate_manifest_file()`；`pvos test` 和 `pvos package` 在执行语法检查或打包前强制使用同一校验器。旧 `agentos` CLI 在 1.x 保持兼容。未知字段会出现在 `Manifest.unknown`，但不影响 v1 Agent 运行。

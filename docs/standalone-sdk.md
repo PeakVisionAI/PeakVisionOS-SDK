@@ -17,12 +17,12 @@ tests/        Dependency-free SDK contract tests
 
 ## Package responsibilities
 
-`agentos-sdk` is for Agent code running on an AgentOS node. Its `AgentOS` client
+`peakvisionos-sdk` is for Agent code running on a PeakVisionOS/AgentOS node. Its `PeakVisionOS` client
 connects to local Unix Sockets and exposes the system primitives and runtime
 helpers. `GatewayClient` is for developer tools and automation outside the
 node; it only calls the stable control-plane HTTP API.
 
-`@peakvision/agentos-sdk` targets Node.js 18+ and browsers with a compatible
+`@peakvision/pvos-sdk` targets Node.js 18+ and browsers with a compatible
 `fetch` implementation. It provides the same remote control-plane operations.
 
 Neither package installs AgentOS itself, downloads models, or grants a caller
@@ -49,7 +49,7 @@ introducing Remote Primitive Protocol requires a protocol major version.
 2. Run Python syntax, HTTP contract, package build and TypeScript build checks.
 3. Confirm the package contents contain no tokens, private keys, customer data, `node_modules` or build caches.
 4. Configure PyPI Trusted Publishing for the GitHub repository and environment.
-5. Configure a least-privilege `NPM_TOKEN` repository secret for `@peakvision/agentos-sdk`.
+5. Configure a least-privilege `NPM_TOKEN` repository secret for `@peakvision/pvos-sdk`.
 6. Push a signed or protected `sdk-v<version>` tag and verify both registry pages.
 7. Announce the compatibility line and migration notes to ISVs and community maintainers.
 

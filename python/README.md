@@ -1,4 +1,4 @@
-# agentos —— AgentOS Python SDK
+# pvos —— PeakVisionOS Python SDK
 
 第一次接入请先阅读[开发者快速开始](../docs/developer-quickstart.zh-CN.md)，其中包含
 macOS、Windows、Linux 环境准备、SSH 隧道、完整 Run 示例和 Agent 部署边界。
@@ -13,7 +13,7 @@ macOS、Windows、Linux 环境准备、SSH 隧道、完整 Run 示例和 Agent �
 
 ```bash
 # 发布版（PyPI）
-pip install agentos-sdk
+pip install peakvisionos-sdk
 
 # 从源码装(仓库内)
 pip install ./python
@@ -24,10 +24,11 @@ pip install -e ./python
 
 装完有两个入口:
 
-- **库**:`import agentos; aos = agentos.AgentOS()`
-- **命令行**:`agentos new my-agent`(生成 agent 骨架)
+- **库**:`import pvos; aos = pvos.PeakVisionOS()`
+- **命令行**:`pvos new my-agent`(生成 agent 骨架)
 
-PyPI 分发名是 `agentos-sdk`，Python 导入名保持为 `agentos`。SDK 不要求安装
+PyPI 分发名是 `peakvisionos-sdk`，Python 导入名是 `pvos`。旧 `agentos` 入口在 1.x
+兼容窗口内保留。SDK 不要求安装
 AgentOS 源码仓库；运行时只需连接目标机器上已启动的 AgentOS 服务。
 
 ## 远程 Gateway 控制面
@@ -63,9 +64,9 @@ print(client.logs("my-agent"))
 ## 快速上手
 
 ```python
-import agentos
+import pvos
 
-aos = agentos.AgentOS(caller="my-agent")   # caller 用于 inferd 算力记账
+aos = pvos.PeakVisionOS(caller="my-agent")   # caller 用于 inferd 算力记账
 
 # 感知(agentd)
 aos.system()            # 系统资源
@@ -93,15 +94,15 @@ ctx = aos.ctx_assemble(8000, "营收情况")
 prompt = ctx["prompt"]
 ```
 
-## 脚手架:`agentos new`
+## 脚手架:`pvos new`
 
 ```bash
-agentos new my-agent
+pvos new my-agent
 # 生成 my-agent/{agent.manifest, agent.py, README.md}
 
 agentos doctor                     # 检查本地原语和运行时
 agentos test my-agent              # 语法/项目测试
-agentos package my-agent           # 生成 .agent.tgz
+pvos package my-agent           # 生成 .agent.tgz
 agentos inspect my-agent           # 校验并查看 Manifest v1
 agentos run my-agent               # 交给 agentrund 托管
 agentos run my-agent --local       # 本地直接运行
@@ -145,7 +146,7 @@ socket 路径与 C 客户端一致,默认走 `/run/...`;本地开发/测试用 e
 
 ## 版本兼容
 
-- `agentos-sdk` `1.5.x` 对应 AgentOS Manifest v1、Harness Adapter v1 和 Control-plane HTTP v1。
+- `peakvisionos-sdk` `1.5.x` 对应 AgentOS Manifest v1、Harness Adapter v1 和 Control-plane HTTP v1。
 - 同一主版本内，新增字段和事件类型向后兼容；客户端必须忽略未知字段。
 - 需要远程调用四大原语时，等待 Remote Primitive Protocol 正式发布，不要直接依赖内部 Unix Socket 路径或未文档化 HTTP 路由。
 

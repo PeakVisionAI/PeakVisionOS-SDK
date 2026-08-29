@@ -100,7 +100,7 @@ pnpm add -Dw ~/work/AgentOS-SDK/typescript
 AgentOS SDK 正式发布到 NPM 后，可以改为：
 
 ```bash
-pnpm add -Dw @peakvision/agentos-sdk
+pnpm add -Dw @peakvision/peakvisionos-sdk
 ```
 
 ## 5. 创建 AgentOS 工具插件
@@ -119,7 +119,7 @@ scratch-agentos-plugin/
 ```ts
 import type { Context } from '@deepseek-ai/cordis'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import { AgentOS } from '@peakvision/agentos-sdk'
+import { AgentOS } from '@peakvision/peakvisionos-sdk'
 
 export const name = 'agentos-tools'
 export const inject = ['tools']
@@ -266,9 +266,9 @@ completed / failed / stopped / timeout / cancelled
 `agentd` 和 `ctxd` 的代码，应放在部署到 AgentOS Ubuntu 节点的 Agent 中：
 
 ```python
-import agentos
+import pvos
 
-aos = agentos.AgentOS(caller="deepseek-worker")
+aos = pvos.PeakVisionOS(caller="deepseek-worker")
 
 system = aos.system()
 answer = aos.chat("根据当前节点状态给出一句运行建议")
@@ -297,7 +297,7 @@ network=loopback
 
 ## 8. 与 Python Harness Adapter v1 的关系
 
-`agentos.AgentOSHarnessBridge` 是 AgentOS 自己的稳定 Python Harness Adapter Contract，
+`pvos.PeakVisionOSHarnessBridge` 是 AgentOS 自己的稳定 Python Harness Adapter Contract，
 其 `plan()` / `validate()` 接口不是 DeepSeek Harness 官方 TypeScript 插件 API。两者不能
 直接互换：
 
@@ -335,7 +335,7 @@ network=loopback
 
 | 现象 | 排查方式 |
 | --- | --- |
-| DSH 启动时报找不到 `@peakvision/agentos-sdk` | 先构建 SDK，再在 DSH 根目录执行 `pnpm add -Dw <SDK 的 typescript 目录>` |
+| DSH 启动时报找不到 `@peakvision/peakvisionos-sdk` | 先构建 SDK，再在 DSH 根目录执行 `pnpm add -Dw <SDK 的 typescript 目录>` |
 | 插件没有加载 | 检查 `cordis.yml` 是否使用绝对插件路径，并执行 `pnpm dsh web --patch ...` |
 | `agentos_list_agents` 返回连接失败 | 检查 SSH 隧道、`AGENTOS_ENDPOINT` 和节点 `agentosd` |
 | HTTP 401 | Token 缺失、错误或已经轮换 |

@@ -33,7 +33,7 @@ python3 -m pip install -e ./python
 cd examples/<sample-directory>
 agentos inspect .
 agentos test .
-agentos package . --output <sample-directory>.agent.tgz
+pvos package . --output <sample-directory>.agent.tgz
 ```
 
 把包安装到节点后运行：
@@ -58,10 +58,10 @@ ssh <ubuntu-user>@<AGENTOS_HOST> agentrun logs <agent-name>
 ```python
 import os
 from pathlib import Path
-import agentos
+import pvos
 
 directory = Path(os.environ.get("AGENT_DOCUMENT_DIR", "/var/lib/agentos/input"))
-aos = agentos.AgentOS(caller="knowledge-docs-agent")
+aos = pvos.PeakVisionOS(caller="knowledge-docs-agent")
 for path in directory.rglob("*"):
     if path.suffix.lower() in {".txt", ".md"}:
         aos.fs_put(path.name, path.read_text(encoding="utf-8"))
@@ -83,10 +83,10 @@ Agent 把 Markdown 产物保存到语义文件系统，后续可以按任务语�
 
 ```python
 import os
-import agentos
+import pvos
 
 task = os.environ.get("AGENT_TASK", "为订单接口设计测试用例")
-aos = agentos.AgentOS(caller="edge-coding-design-office-agent")
+aos = pvos.PeakVisionOS(caller="edge-coding-design-office-agent")
 ctx = aos.ctx_assemble(7000, task, want_memory=False, want_files=True)
 result = aos.chat(
     f"任务：{task}\n上下文：{ctx['prompt']}\n"
@@ -108,9 +108,9 @@ print(result)
 
 ```python
 import os
-import agentos
+import pvos
 
-aos = agentos.AgentOS(caller="local-model-industry-agent")
+aos = pvos.PeakVisionOS(caller="local-model-industry-agent")
 print("hardware:", aos.hwinfo())
 print("models:", aos.models())
 if os.environ.get("AGENT_MODEL"):
@@ -134,9 +134,9 @@ Manifest 只授予 `agent,infer`，不允许该样例把行业数据写入记忆
 
 ```python
 import os
-import agentos
+import pvos
 
-aos = agentos.AgentOS(caller="long-memory-semantic-agent")
+aos = pvos.PeakVisionOS(caller="long-memory-semantic-agent")
 fact = os.environ.get("AGENT_INPUT", "客户要求先列风险再列行动项")
 query = os.environ.get("AGENT_QUERY", "客户有哪些交付要求？")
 aos.memory_write(fact)
