@@ -9,7 +9,7 @@ here.
 
 ```text
 python/       Python package and pvos CLI (agentos remains a 1.x alias)
-typescript/   TypeScript/NPM package
+typescript/   TypeScript source client for local builds
 protocol/     Versioned public contract index
 docs/         Manifest, Harness and Gateway contract details
 tests/        Dependency-free SDK contract tests
@@ -22,8 +22,9 @@ connects to local Unix Sockets and exposes the system primitives and runtime
 helpers. `GatewayClient` is for developer tools and automation outside the
 node; it only calls the stable control-plane HTTP API.
 
-`@peakvision/pvos-sdk` targets Node.js 18+ and browsers with a compatible
-`fetch` implementation. It provides the same remote control-plane operations.
+The TypeScript source client targets Node.js 18+ and browsers with a compatible
+`fetch` implementation. It provides the same remote control-plane operations,
+but is not currently published to NPM.
 
 Neither package installs AgentOS itself, downloads models, or grants a caller
 new permissions. Manifest authorization and Gateway token policy remain owned
@@ -45,13 +46,12 @@ introducing Remote Primitive Protocol requires a protocol major version.
 
 ## Publishing checklist
 
-1. Update `python/pyproject.toml` and `typescript/package.json` to the same release intent.
+1. Update `python/pyproject.toml` for the intended Python release.
 2. Run Python syntax, HTTP contract, package build and TypeScript build checks.
 3. Confirm the package contents contain no tokens, private keys, customer data, `node_modules` or build caches.
 4. Configure PyPI Trusted Publishing for the GitHub repository and environment.
-5. Configure a least-privilege `NPM_TOKEN` repository secret for `@peakvision/pvos-sdk`.
-6. Push a signed or protected `sdk-v<version>` tag and verify both registry pages.
-7. Announce the compatibility line and migration notes to ISVs and community maintainers.
+5. Push a signed or protected `sdk-v<version>` tag and verify the PyPI project page.
+6. Announce the compatibility line and migration notes to ISVs and community maintainers.
 
 Review [CHANGELOG.md](../CHANGELOG.md) before selecting a version tag; the current
 `1.5.0-alpha.1` package is production-oriented code but remains pre-release pending

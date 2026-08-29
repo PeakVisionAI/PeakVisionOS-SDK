@@ -45,7 +45,7 @@ Windows PowerShell 可以使用 `python` 代替 `python3`。后续 Bash 示例�
 
 ## 3. 获取并安装 SDK
 
-在 SDK 尚未正式发布到 PyPI/NPM，或需要最新源码时，使用源码安装：
+需要最新源码或 TypeScript 控制面客户端时，克隆仓库：
 
 ```bash
 git clone https://github.com/PeakVisionAI/PeakVisionOS-SDK.git
@@ -61,12 +61,13 @@ npm run build
 cd ..
 ```
 
-正式包发布后可以直接安装：
+Python 正式包可以直接安装：
 
 ```bash
 python3 -m pip install peakvisionos-sdk
-npm install @peakvision/pvos-sdk
 ```
+
+TypeScript 客户端当前不发布到 NPM，请从仓库的 `typescript/` 目录构建或作为本地依赖安装。
 
 检查 Python SDK 和 CLI：
 
@@ -190,17 +191,13 @@ python3 quickstart.py
 
 ## 6. TypeScript：连接同一个控制面
 
-在你的 Node.js 项目中安装 SDK：
+先构建仓库中的 TypeScript 客户端，再作为本地依赖安装：
 
 ```bash
 mkdir agentos-ts-demo
 cd agentos-ts-demo
 npm init -y
 
-# 正式发布后
-npm install @peakvision/pvos-sdk
-
-# 尚未发布时，改用本机 PeakVisionOS-SDK/typescript 的实际路径
 npm install ../PeakVisionOS-SDK/typescript
 ```
 

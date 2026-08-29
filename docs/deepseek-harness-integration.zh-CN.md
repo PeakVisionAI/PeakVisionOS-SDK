@@ -97,11 +97,7 @@ pnpm run build
 pnpm add -Dw ~/work/PeakVisionOS-SDK/typescript
 ```
 
-PeakVisionOS SDK 正式发布到 NPM 后，可以改为：
-
-```bash
-pnpm add -Dw @peakvision/pvos-sdk
-```
+当前 TypeScript 客户端不发布到 NPM，请继续使用上述源码链接方式。
 
 ## 5. 创建 AgentOS 工具插件
 

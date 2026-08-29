@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- Renamed the new public product surface to PeakVisionOS: `peakvisionos-sdk`,
-  `pvos`, and `@peakvision/pvos-sdk`; legacy `agentos` imports/CLI remain aliases.
+- Renamed the public Python product surface to PeakVisionOS: `peakvisionos-sdk`
+  and `pvos`; legacy `agentos` imports/CLI remain aliases. The TypeScript
+  control-plane client remains available from source and is not published to NPM.
 - Added a local control-plane mock server, repeatable acceptance command, atomic
   Agent package install/deploy/uninstall helpers, OpenAPI v1, API reference and
   developer environment guide.
@@ -19,7 +20,7 @@
 - Added a Chinese developer quickstart covering macOS, Windows and Linux setup,
   secure node connectivity, Python/TypeScript control-plane examples, Agent packaging,
   local primitive usage and troubleshooting.
-- Added Apache-2.0 license files to the repository and both distributable packages.
+- Added Apache-2.0 license files to the repository and package source trees.
 - Added complete documented control-plane client coverage: Workspaces, Tasks, Run detail,
   event pages/iteration, and Gateway node registry/snapshot operations.
 - Added bounded exponential retries for idempotent requests and explicit idempotency keys
@@ -28,5 +29,5 @@
   types, Python `py.typed`, and Python 3.8/3.9/3.12 plus Node 18/20 CI matrices.
 - Added dependency-free Python and TypeScript runtime contract tests.
 
-The current package version remains `1.5.0-alpha.1` until a live Ubuntu AgentOS node,
-Gateway TLS/mTLS and an ISV pilot complete release acceptance.
+The current Python package version is `1.5.0a1`. General availability still requires
+a live Ubuntu AgentOS node, Gateway TLS/mTLS and an ISV pilot to complete release acceptance.

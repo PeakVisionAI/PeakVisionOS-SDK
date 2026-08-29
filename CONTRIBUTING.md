@@ -1,7 +1,6 @@
 # Contributing to PeakVisionOS SDK
 
-感谢参与 PeakVisionOS SDK。新代码请使用 `pvos` / `@peakvision/pvos-sdk`；
-`agentos` 仅用于兼容测试。
+感谢参与 PeakVisionOS SDK。Python 新代码请使用 `pvos`；TypeScript 控制面客户端当前从源码构建。`agentos` 仅用于兼容测试。
 
 ## 开发流程
 

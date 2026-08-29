@@ -1,4 +1,4 @@
-import { PeakVisionOS } from "@peakvision/pvos-sdk";
+import { PeakVisionOS } from "../../typescript/dist/index.js";
 
 const client = new PeakVisionOS({
   endpoint: process.env.PVOS_ENDPOINT,

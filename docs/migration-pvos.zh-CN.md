@@ -24,8 +24,8 @@ aos = pvos.PeakVisionOS()
 
 ```bash
 npm uninstall @peakvision/agentos-sdk
-npm install @peakvision/pvos-sdk
+npm install ../PeakVisionOS-SDK/typescript
 ```
 
 `AgentOS` 类继续导出，新增项目应导入 `PeakVisionOS`。控制面协议仍为 v1，
-无需修改 Workspace/Task/Run/Event 字段。
+无需修改 Workspace/Task/Run/Event 字段。TypeScript 客户端当前从源码或本地路径使用，暂不发布到 NPM。

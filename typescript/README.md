@@ -1,16 +1,17 @@
-# `@peakvision/pvos-sdk`
+# PeakVisionOS TypeScript Client（源码预览）
 
 TypeScript/Node.js 客户端，用 HTTPS 访问 PeakVisionOS Remote Gateway 控制面。
-要求 Node.js 18+，也可在浏览器环境传入自定义 `fetch`。
+要求 Node.js 18+，也可在浏览器环境传入自定义 `fetch`。当前项目的公开发布主线是 Python/PyPI；本目录暂不发布到 NPM，适合从源码构建和集成测试。
 
-## 安装与调用
+## 从源码构建与调用
 
 ```bash
-npm install @peakvision/pvos-sdk
+npm ci
+npm run build
 ```
 
 ```ts
-import { PeakVisionOS, GatewayError } from "@peakvision/pvos-sdk";
+import { PeakVisionOS, GatewayError } from "./dist/index.js";
 
 const client = new PeakVisionOS({
   endpoint: "https://gateway.example/gateway/v1/nodes/node-1/api/v1",
