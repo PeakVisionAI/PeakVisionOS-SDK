@@ -1,5 +1,10 @@
 [build-system]
-requires = ["setuptools>=77"]
+# Setuptools 76+ dropped Python 3.8 support. Select the last compatible line
+# only on Python 3.8 and keep current setuptools on newer interpreters.
+requires = [
+    "setuptools>=61,<76; python_version < '3.9'",
+    "setuptools>=77; python_version >= '3.9'",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,8 +13,7 @@ version = "1.5.0a1"
 description = "PeakVisionOS Python SDK for local primitives, managed Agents, Harness adapters and the remote Gateway"
 readme = "README.md"
 requires-python = ">=3.8"
-license = "Apache-2.0"
-license-files = ["LICENSE"]
+license = { file = "LICENSE" }
 authors = [{ name = "PeakVisionAI" }]
 keywords = ["agent", "peakvisionos", "pvos", "agentos", "harness", "edge-ai"]
 classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
