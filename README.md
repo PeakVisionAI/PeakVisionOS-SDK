@@ -214,4 +214,5 @@ Mock 和合约测试证明 SDK 的请求、响应和工具链契约，不证明�
 
 Apache-2.0，详见 [LICENSE](LICENSE)。
 
-[![Star History Chart](https://api.star-history.com/svg?repos=PeakVisionAI/PeakVisionOS-SDK&type=Date)](https://star-history.com/#PeakVisionAI/PeakVisionOS‑SDK&Date)
+## Star History
+[![Star History Chart](https://star‑history.dera.page/svg?repos=PeakVisionAI/PeakVisionOS‑SDK&type=Date)](https://star‑history.dera.page/#PeakVisionAI/PeakVisionOS‑SDK&Date)
