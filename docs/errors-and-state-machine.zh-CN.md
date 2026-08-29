@@ -2,6 +2,9 @@
 
 ## 传输错误
 
+远程错误统一暴露 `code`、`message`、`status`、`retryable`、`request_id`、
+`details` 和 `retry_after`。业务代码优先判断 `code`，不要解析错误字符串。
+
 | 错误 | 处理 | 是否重试 |
 | --- | --- | --- |
 | `PVOSClientError` | 检查节点 Socket、Manifest 授权和对应 daemon | 仅在业务允许时 |

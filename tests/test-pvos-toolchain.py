@@ -5,6 +5,8 @@ import tempfile
 import threading
 import tarfile
 import sys
+import os
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
@@ -33,6 +35,28 @@ with tempfile.TemporaryDirectory(prefix="pvos-test-") as temp:
     installed = install_package(bundle, install_root)
     assert installed["name"] == "knowledge-docs-agent"
     assert (install_root / "knowledge-docs-agent" / "agent.py").is_file()
+
+    original_source = (install_root / "knowledge-docs-agent" / "agent.py").read_bytes()
+    original_manifest = (install_root / "knowledge-docs-agent.agent").read_bytes()
+    real_replace = os.replace
+
+    failure_injected = [False]
+
+    def fail_manifest_switch(source_path, destination_path):
+        if str(destination_path).endswith("knowledge-docs-agent.agent") and not failure_injected[0]:
+            failure_injected[0] = True
+            raise OSError("simulated manifest switch failure")
+        return real_replace(source_path, destination_path)
+
+    with mock.patch("pvos.package_manager.os.replace", side_effect=fail_manifest_switch):
+        try:
+            install_package(bundle, install_root)
+        except OSError:
+            pass
+        else:
+            raise AssertionError("simulated install failure must propagate")
+    assert (install_root / "knowledge-docs-agent" / "agent.py").read_bytes() == original_source
+    assert (install_root / "knowledge-docs-agent.agent").read_bytes() == original_manifest
     assert uninstall_package("knowledge-docs-agent", install_root)
 
 server.shutdown()

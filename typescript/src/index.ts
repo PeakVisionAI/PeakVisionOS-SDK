@@ -1,20 +1,24 @@
 export interface Agent {
   name: string;
-  [key: string]: unknown;
+  status?: AgentStatus;
+  primitives?: string[];
 }
+
+export type AgentStatus = "active" | "inactive" | "starting" | "stopped" | string;
+export type RunStatus = "created" | "queued" | "running" | "completed" | "failed" | "cancelled" | "stopped" | string;
 
 export interface Run {
   run_id: string;
   agent: string;
-  status?: string;
-  [key: string]: unknown;
+  status?: RunStatus;
+  exit_code?: number | null;
 }
 
 export interface Workspace {
   workspace_id: string;
   name: string;
   created_at?: string;
-  [key: string]: unknown;
+  metadata?: Record<string, unknown>;
 }
 
 export interface Task {
@@ -24,31 +28,51 @@ export interface Task {
   description?: string;
   agent?: string;
   status?: string;
-  [key: string]: unknown;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RunEvent {
   event_id?: number;
   type: string;
-  [key: string]: unknown;
+  run_id?: string;
+  task_id?: string;
+  timestamp?: number;
+  payload?: Record<string, unknown>;
 }
 
 export interface GatewayNode {
   node_id: string;
   name: string;
   online?: boolean;
-  [key: string]: unknown;
+  capabilities?: Record<string, unknown>;
 }
 
 export class GatewayError extends Error {
   readonly status?: number;
+  readonly code: string;
+  readonly retryable: boolean;
+  readonly requestId?: string;
+  readonly details?: unknown;
+  readonly retryAfter?: number;
+  readonly cause?: unknown;
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, options: {
+    code?: string; retryable?: boolean; requestId?: string; details?: unknown;
+    retryAfter?: number; cause?: unknown;
+  } = {}) {
     super(message);
     this.name = "GatewayError";
     this.status = status;
+    this.code = options.code ?? "gateway_error";
+    this.retryable = options.retryable ?? false;
+    this.requestId = options.requestId;
+    this.details = options.details;
+    this.retryAfter = options.retryAfter;
+    this.cause = options.cause;
   }
 }
+
+export interface RequestOptions { signal?: AbortSignal; }
 
 export interface AgentOSOptions {
   endpoint?: string;
@@ -104,7 +128,7 @@ export class AgentOS {
     }
   }
 
-  protected async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  protected async request<T>(path: string, init: RequestInit = {}, requestOptions: RequestOptions = {}): Promise<T> {
     const headers = new Headers(init.headers);
     headers.set("Accept", "application/json");
     if (this.token) headers.set("Authorization", `Bearer ${this.token}`);
@@ -116,6 +140,9 @@ export class AgentOS {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+      const abort = () => controller.abort();
+      if (requestOptions.signal?.aborted) controller.abort();
+      requestOptions.signal?.addEventListener("abort", abort, { once: true });
       try {
         const response = await this.fetcher(`${this.endpoint}/${path.replace(/^\//, "")}`, { ...init, headers, signal: controller.signal });
         const body = await response.json().catch(() => ({}));
@@ -125,18 +152,31 @@ export class AgentOS {
             await this.delay(attempt);
             continue;
           }
-          throw new GatewayError(`Gateway HTTP ${response.status}: ${body.error ?? "request failed"}`, response.status);
+          const error = body?.error;
+          const message = typeof error === "object" && error !== null ? String(error.message ?? "request failed") : String(error ?? "request failed");
+          const retryAfterValue = typeof error === "object" && error !== null ? Number(error.retry_after) : undefined;
+          throw new GatewayError(message, response.status, {
+            code: typeof error === "object" && error !== null ? String(error.code ?? "http_error") : "http_error",
+            retryable,
+            requestId: response.headers.get("X-Request-Id") ?? undefined,
+            details: typeof error === "object" && error !== null ? error.details : undefined,
+            retryAfter: Number.isFinite(retryAfterValue) ? retryAfterValue : undefined,
+          });
         }
         return body as T;
       } catch (error) {
         if (error instanceof GatewayError) throw error;
+        if (requestOptions.signal?.aborted) {
+          throw new GatewayError("Request aborted", undefined, { code: "aborted", retryable: false, cause: error });
+        }
         if (attempt + 1 < attempts) {
           await this.delay(attempt);
           continue;
         }
-        throw new GatewayError(`Gateway unavailable: ${error instanceof Error ? error.message : String(error)}`);
+        throw new GatewayError(`Gateway unavailable: ${error instanceof Error ? error.message : String(error)}`, undefined, { code: "transport_error", retryable: true, cause: error });
       } finally {
         clearTimeout(timer);
+        requestOptions.signal?.removeEventListener("abort", abort);
       }
     }
     throw new GatewayError("Gateway request exhausted retry policy", undefined);
@@ -147,48 +187,48 @@ export class AgentOS {
     return delay ? new Promise((resolve) => setTimeout(resolve, delay)) : Promise.resolve();
   }
 
-  health(): Promise<{ ok: boolean; [key: string]: unknown }> { return this.request("health"); }
-  async agents(): Promise<Agent[]> { return (await this.request<{ agents: Agent[] }>("agents")).agents ?? []; }
-  async workspaces(): Promise<Workspace[]> { return (await this.request<{ workspaces: Workspace[] }>("workspaces")).workspaces ?? []; }
-  createWorkspace(name: string): Promise<Workspace> {
+  health(options?: RequestOptions): Promise<{ ok: boolean; [key: string]: unknown }> { return this.request("health", {}, options); }
+  async agents(options?: RequestOptions): Promise<Agent[]> { return (await this.request<{ agents: Agent[] }>("agents", {}, options)).agents ?? []; }
+  async workspaces(options?: RequestOptions): Promise<Workspace[]> { return (await this.request<{ workspaces: Workspace[] }>("workspaces", {}, options)).workspaces ?? []; }
+  createWorkspace(name: string, options?: RequestOptions): Promise<Workspace> {
     if (!name.trim()) throw new TypeError("name is required");
-    return this.request("workspaces", { method: "POST", body: JSON.stringify({ name: name.trim() }) });
+    return this.request("workspaces", { method: "POST", body: JSON.stringify({ name: name.trim() }) }, options);
   }
-  async tasks(workspaceId?: string): Promise<Task[]> {
+  async tasks(workspaceId?: string, options?: RequestOptions): Promise<Task[]> {
     const query = workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : "";
-    return (await this.request<{ tasks: Task[] }>(`tasks${query}`)).tasks ?? [];
+    return (await this.request<{ tasks: Task[] }>(`tasks${query}`, {}, options)).tasks ?? [];
   }
-  createTask(workspaceId: string, title: string, description = "", agent = ""): Promise<Task> {
+  createTask(workspaceId: string, title: string, description = "", agent = "", options?: RequestOptions): Promise<Task> {
     if (!workspaceId.trim() || !title.trim()) throw new TypeError("workspaceId and title are required");
-    return this.request("tasks", { method: "POST", body: JSON.stringify({ workspace_id: workspaceId.trim(), title: title.trim(), description, agent }) });
+    return this.request("tasks", { method: "POST", body: JSON.stringify({ workspace_id: workspaceId.trim(), title: title.trim(), description, agent }) }, options);
   }
-  async runs(workspaceId?: string): Promise<Run[]> {
+  async runs(workspaceId?: string, options?: RequestOptions): Promise<Run[]> {
     const query = workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : "";
-    return (await this.request<{ runs: Run[] }>(`runs${query}`)).runs ?? [];
+    return (await this.request<{ runs: Run[] }>(`runs${query}`, {}, options)).runs ?? [];
   }
-  createRun(agent: string, taskId = "", workspaceId = "", manifestDigest = "", idempotencyKey?: string): Promise<Run> {
+  createRun(agent: string, taskId = "", workspaceId = "", manifestDigest = "", idempotencyKey?: string, options?: RequestOptions): Promise<Run> {
     if (!agent.trim()) throw new TypeError("agent is required");
     const headers = idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined;
-    return this.request("runs", { method: "POST", headers, body: JSON.stringify({ agent: agent.trim(), task_id: taskId, workspace_id: workspaceId, manifest_digest: manifestDigest }) });
+    return this.request("runs", { method: "POST", headers, body: JSON.stringify({ agent: agent.trim(), task_id: taskId, workspace_id: workspaceId, manifest_digest: manifestDigest }) }, options);
   }
-  run(runId: string): Promise<Run> {
+  run(runId: string, options?: RequestOptions): Promise<Run> {
     if (!runId) throw new TypeError("runId is required");
-    return this.request(`runs/${encodeURIComponent(runId)}`);
+    return this.request(`runs/${encodeURIComponent(runId)}`, {}, options);
   }
-  stopRun(runId: string): Promise<Record<string, unknown>> { return this.request(`runs/${encodeURIComponent(runId)}/stop`, { method: "POST" }); }
-  logs(agent: string): Promise<{ logs?: string; [key: string]: unknown }> { return this.request(`agents/${encodeURIComponent(agent)}/logs`); }
-  async eventsPage(limit = 200, after = 0): Promise<{ events: RunEvent[]; after?: number }> {
+  stopRun(runId: string, options?: RequestOptions): Promise<Record<string, unknown>> { return this.request(`runs/${encodeURIComponent(runId)}/stop`, { method: "POST" }, options); }
+  logs(agent: string, options?: RequestOptions): Promise<{ logs?: string; [key: string]: unknown }> { return this.request(`agents/${encodeURIComponent(agent)}/logs`, {}, options); }
+  async eventsPage(limit = 200, after = 0, options?: RequestOptions): Promise<{ events: RunEvent[]; after?: number }> {
     if (!Number.isInteger(limit) || limit < 1 || limit > 1000 || !Number.isInteger(after) || after < 0) throw new TypeError("invalid event pagination");
-    return this.request(`events?limit=${limit}&after=${after}`);
+    return this.request(`events?limit=${limit}&after=${after}`, {}, options);
   }
-  async events(limit = 200, after = 0): Promise<RunEvent[]> {
-    return (await this.eventsPage(limit, after)).events ?? [];
+  async events(limit = 200, after = 0, options?: RequestOptions): Promise<RunEvent[]> {
+    return (await this.eventsPage(limit, after, options)).events ?? [];
   }
-  async *iterEvents(after = 0, limit = 200, maxPages?: number): AsyncGenerator<RunEvent> {
+  async *iterEvents(after = 0, limit = 200, maxPages?: number, options?: RequestOptions): AsyncGenerator<RunEvent> {
     let cursor = after;
     let pages = 0;
     while (maxPages === undefined || pages < maxPages) {
-      const page = await this.eventsPage(limit, cursor);
+      const page = await this.eventsPage(limit, cursor, options);
       const items = page.events ?? [];
       if (!items.length) return;
       for (const event of items) yield event;
@@ -206,17 +246,17 @@ export class PeakVisionOS extends AgentOS {}
 
 /** Gateway registry client for node management and snapshots. */
 export class RemoteGateway extends AgentOS {
-  async nodes(): Promise<GatewayNode[]> { return (await this.request<{ nodes: GatewayNode[] }>("nodes")).nodes ?? []; }
-  registerNode(nodeId: string, name: string, baseUrl: string, token: string, capabilities: Record<string, unknown> = {}): Promise<GatewayNode> {
+  async nodes(options?: RequestOptions): Promise<GatewayNode[]> { return (await this.request<{ nodes: GatewayNode[] }>("nodes", {}, options)).nodes ?? []; }
+  registerNode(nodeId: string, name: string, baseUrl: string, token: string, capabilities: Record<string, unknown> = {}, options?: RequestOptions): Promise<GatewayNode> {
     if (!nodeId.trim() || !name.trim() || !baseUrl.trim() || !token) throw new TypeError("nodeId, name, baseUrl and token are required");
-    return this.request("nodes", { method: "POST", body: JSON.stringify({ node_id: nodeId, name, base_url: baseUrl, token, capabilities }) });
+    return this.request("nodes", { method: "POST", body: JSON.stringify({ node_id: nodeId, name, base_url: baseUrl, token, capabilities }) }, options);
   }
-  rotateNodeToken(nodeId: string, token: string): Promise<Record<string, unknown>> {
+  rotateNodeToken(nodeId: string, token: string, options?: RequestOptions): Promise<Record<string, unknown>> {
     if (!nodeId || !token) throw new TypeError("nodeId and token are required");
-    return this.request(`nodes/${encodeURIComponent(nodeId)}/token`, { method: "POST", body: JSON.stringify({ token }) });
+    return this.request(`nodes/${encodeURIComponent(nodeId)}/token`, { method: "POST", body: JSON.stringify({ token }) }, options);
   }
-  snapshot(nodeId: string): Promise<Record<string, unknown>> {
+  snapshot(nodeId: string, options?: RequestOptions): Promise<Record<string, unknown>> {
     if (!nodeId) throw new TypeError("nodeId is required");
-    return this.request(`nodes/${encodeURIComponent(nodeId)}/snapshot`);
+    return this.request(`nodes/${encodeURIComponent(nodeId)}/snapshot`, {}, options);
   }
 }

@@ -19,13 +19,28 @@ from urllib.request import Request, urlopen
 
 
 class GatewayError(RuntimeError):
-    """A remote Gateway request failed."""
+    """Machine-readable failure returned by or while reaching the Gateway."""
 
     def __init__(self, message: str, status: Optional[int] = None,
-                 retryable: bool = False):
+                 retryable: bool = False, code: str = "gateway_error",
+                 request_id: Optional[str] = None, details=None,
+                 retry_after: Optional[float] = None, cause=None):
         super().__init__(message)
+        self.message = message
+        self.code = code
         self.status = status
         self.retryable = retryable
+        self.request_id = request_id
+        self.details = details
+        self.retry_after = retry_after
+        self.cause = cause
+
+    def to_dict(self):
+        return {
+            "code": self.code, "message": self.message, "status": self.status,
+            "retryable": self.retryable, "request_id": self.request_id,
+            "details": self.details, "retry_after": self.retry_after,
+        }
 
 
 @dataclass(frozen=True)
@@ -94,25 +109,54 @@ class GatewayClient:
                     try:
                         return json.loads(raw.decode("utf-8"))
                     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-                        raise GatewayError("Gateway returned invalid JSON", response.status) from exc
+                        raise GatewayError(
+                            "Gateway returned invalid JSON", response.status,
+                            code="invalid_response",
+                            request_id=response.headers.get("X-Request-Id"), cause=exc,
+                        ) from exc
             except HTTPError as exc:
                 detail = exc.read().decode("utf-8", "replace")
+                code = "http_error"
+                message = detail or exc.reason or "request failed"
+                details = None
+                retry_after = None
+                body_request_id = None
                 try:
                     parsed = json.loads(detail)
-                    detail = parsed.get("error", detail) if isinstance(parsed, dict) else detail
+                    error = parsed.get("error", parsed) if isinstance(parsed, dict) else parsed
+                    body_request_id = parsed.get("request_id") if isinstance(parsed, dict) else None
+                    if isinstance(error, dict):
+                        code = str(error.get("code") or code)
+                        message = str(error.get("message") or message)
+                        details = error.get("details")
+                        retry_after = error.get("retry_after")
+                    elif error:
+                        message = str(error)
                 except json.JSONDecodeError:
                     pass
+                if retry_after is None:
+                    retry_after = exc.headers.get("Retry-After")
+                try:
+                    retry_after = float(retry_after) if retry_after is not None else None
+                except (TypeError, ValueError):
+                    retry_after = None
                 retryable = exc.code in self.retry_policy.retry_statuses
                 if retryable and attempt + 1 < attempts:
                     self._sleep(attempt)
                     continue
-                raise GatewayError(f"Gateway HTTP {exc.code}: {detail}", exc.code, retryable) from exc
+                raise GatewayError(
+                    message, exc.code, retryable, code,
+                    exc.headers.get("X-Request-Id") or body_request_id, details, retry_after, exc,
+                ) from exc
             except (URLError, TimeoutError, OSError) as exc:
                 reason = getattr(exc, "reason", str(exc))
                 if attempt + 1 < attempts:
                     self._sleep(attempt)
                     continue
-                raise GatewayError(f"Gateway unavailable: {reason}", retryable=True) from exc
+                raise GatewayError(
+                    f"Gateway unavailable: {reason}", retryable=True,
+                    code="transport_error", cause=exc,
+                ) from exc
 
         raise GatewayError("Gateway request exhausted retry policy", retryable=True)
 
@@ -240,10 +284,16 @@ RemoteGatewayClient = GatewayRegistryClient
 
 
 class AsyncGatewayClient:
-    """Async facade over :class:`GatewayClient` without extra dependencies."""
+    """Async facade with method parity for node and registry operations.
+
+    Requests run in a worker thread to keep the package dependency-free.
+    Cancelling the coroutine stops waiting for the result but cannot interrupt
+    a request already executing in ``urllib``; the configured timeout remains
+    the hard upper bound for that worker.
+    """
 
     def __init__(self, *args, **kwargs):
-        self._client = GatewayClient(*args, **kwargs)
+        self._client = GatewayRegistryClient(*args, **kwargs)
 
     async def _run(self, method, *args, **kwargs):
         loop = asyncio.get_running_loop()
@@ -288,3 +338,35 @@ class AsyncGatewayClient:
 
     async def events(self, limit=200, after=0):
         return await self._run("events", limit, after)
+
+    async def events_page(self, limit=200, after=0):
+        return await self._run("events_page", limit, after)
+
+    async def iter_events(self, after=0, limit=200, max_pages=None):
+        cursor = after
+        pages = 0
+        while max_pages is None or pages < max_pages:
+            page = await self.events_page(limit, cursor)
+            items = page.get("events", [])
+            if not items:
+                return
+            for event in items:
+                yield event
+            ids = [event.get("event_id") for event in items if isinstance(event, dict)]
+            next_cursor = max(ids) if ids and all(isinstance(value, int) for value in ids) else cursor
+            if next_cursor <= cursor:
+                return
+            cursor = next_cursor
+            pages += 1
+
+    async def nodes(self):
+        return await self._run("nodes")
+
+    async def register_node(self, node_id, name, base_url, token, capabilities=None):
+        return await self._run("register_node", node_id, name, base_url, token, capabilities)
+
+    async def rotate_node_token(self, node_id, token):
+        return await self._run("rotate_node_token", node_id, token)
+
+    async def snapshot(self, node_id):
+        return await self._run("snapshot", node_id)

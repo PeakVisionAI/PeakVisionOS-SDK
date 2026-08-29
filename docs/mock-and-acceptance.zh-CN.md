@@ -14,8 +14,10 @@ export PVOS_ENDPOINT=http://127.0.0.1:17680/api/v1
 pvos acceptance
 ```
 
-Mock 会创建 Workspace、Task、Run，并返回 `run.started`、`run.completed`
-事件和日志；不模拟真实推理、GPU、Unix Socket、cgroup 或隔离。
+HTTP Mock 会创建 Workspace、Task、Run，并返回 `run.started`、`run.completed`
+事件和日志。Python 合约测试还可用 `pvos.PrimitiveMock` 启动临时 Unix Socket，
+模拟 agentd、inferd、memoryd、fsd、agentrund 和 ctxd 的协议成功/失败路径。
+两者都不模拟真实推理、GPU、cgroup 或隔离。
 
 ## Ubuntu/AMD395 验收
 

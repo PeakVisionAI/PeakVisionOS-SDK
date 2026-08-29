@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import hashlib
 import pathlib
 import re
 import shutil
@@ -13,23 +14,44 @@ from .manifest import validate_manifest_file
 
 
 SAFE_REMOTE = re.compile(r"^[A-Za-z0-9_.@:-]+$")
+MAX_PACKAGE_BYTES = 256 * 1024 * 1024
+MAX_PACKAGE_FILES = 4096
 
 
 def _safe_extract(bundle, destination):
     root = destination.resolve()
-    for member in bundle.getmembers():
+    members = bundle.getmembers()
+    if len(members) > MAX_PACKAGE_FILES:
+        raise ValueError("Agent package contains too many files")
+    unpacked = sum(member.size for member in members if member.isfile())
+    if unpacked > MAX_PACKAGE_BYTES:
+        raise ValueError("Agent package exceeds the unpacked size limit")
+    for member in members:
         target = (root / member.name).resolve()
         if target != root and root not in target.parents:
             raise ValueError("package path escapes destination: " + member.name)
-        if member.issym() or member.islnk():
-            raise ValueError("package links are not allowed: " + member.name)
-    bundle.extractall(root)
+        if not (member.isfile() or member.isdir()):
+            raise ValueError("package special files and links are not allowed: " + member.name)
+    bundle.extractall(root, members=members)
 
 
-def inspect_package(package):
+def inspect_package(package, expected_sha256=None, signature_verifier=None,
+                    require_signature=False):
     package = pathlib.Path(package).resolve()
     if not package.is_file():
         raise FileNotFoundError(str(package))
+    digest_hasher = hashlib.sha256()
+    with package.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest_hasher.update(chunk)
+    digest = digest_hasher.hexdigest()
+    if expected_sha256 and digest.lower() != str(expected_sha256).lower():
+        raise ValueError("Agent package SHA-256 does not match")
+    if signature_verifier is not None:
+        if not signature_verifier(package, digest):
+            raise ValueError("Agent package signature is not trusted")
+    elif require_signature:
+        raise ValueError("a signature_verifier is required for signed-only installation")
     temporary = tempfile.TemporaryDirectory(prefix="pvos-package-")
     staging = pathlib.Path(temporary.name)
     try:
@@ -48,34 +70,75 @@ def inspect_package(package):
         raise
 
 
-def install_package(package, root="/etc/agent-os/agents"):
-    temporary, staging, manifest = inspect_package(package)
+def _apply_permissions(path, owner=None, group=None, dir_mode=0o750, file_mode=0o640):
+    for item in [path] + list(path.rglob("*")):
+        if item.is_dir():
+            item.chmod(dir_mode)
+        elif item.is_file():
+            mode = file_mode | (0o110 if item.stat().st_mode & 0o110 else 0)
+            item.chmod(mode)
+        if owner is not None or group is not None:
+            shutil.chown(item, user=owner, group=group)
+
+
+def install_package(package, root="/etc/agent-os/agents", expected_sha256=None,
+                    signature_verifier=None, require_signature=False,
+                    owner=None, group=None, dir_mode=0o750, file_mode=0o640,
+                    lifecycle=None):
+    temporary, staging, manifest = inspect_package(
+        package, expected_sha256, signature_verifier, require_signature,
+    )
     root_path = pathlib.Path(root).resolve()
     root_path.mkdir(parents=True, exist_ok=True)
     destination = root_path / manifest.name
     manifest_destination = root_path / (manifest.name + ".agent")
     work = pathlib.Path(tempfile.mkdtemp(prefix="." + manifest.name + "-", dir=str(root_path)))
-    backup = root_path / ("." + manifest.name + ".backup")
+    backup_root = pathlib.Path(tempfile.mkdtemp(prefix="." + manifest.name + "-backup-", dir=str(root_path)))
+    backup_code = backup_root / "code"
+    backup_manifest = backup_root / "manifest"
+    temp_manifest = root_path / ("." + manifest.name + ".agent.tmp")
+    installed_code = False
+    installed_manifest = False
+    stopped = False
     try:
         for item in staging.iterdir():
             shutil.copytree(item, work / item.name) if item.is_dir() else shutil.copy2(item, work / item.name)
-        if backup.exists():
-            shutil.rmtree(backup)
+        _apply_permissions(work, owner, group, dir_mode, file_mode)
+        shutil.copy2(work / "agent.manifest", temp_manifest)
+        temp_manifest.chmod(file_mode)
+        if owner is not None or group is not None:
+            shutil.chown(temp_manifest, user=owner, group=group)
+        if lifecycle is not None:
+            lifecycle.stop(manifest.name)
+            stopped = True
         if destination.exists():
-            os.replace(destination, backup)
+            os.replace(destination, backup_code)
+        if manifest_destination.exists():
+            os.replace(manifest_destination, backup_manifest)
         os.replace(work, destination)
-        temp_manifest = root_path / ("." + manifest.name + ".agent.tmp")
-        shutil.copy2(destination / "agent.manifest", temp_manifest)
+        installed_code = True
         os.replace(temp_manifest, manifest_destination)
-        if backup.exists():
-            shutil.rmtree(backup)
+        installed_manifest = True
+        if lifecycle is not None:
+            lifecycle.reload(manifest.name)
     except Exception:
         if work.exists():
             shutil.rmtree(work)
-        if backup.exists() and not destination.exists():
-            os.replace(backup, destination)
+        if temp_manifest.exists():
+            temp_manifest.unlink()
+        if installed_manifest and manifest_destination.exists():
+            manifest_destination.unlink()
+        if installed_code and destination.exists():
+            shutil.rmtree(destination)
+        if backup_code.exists():
+            os.replace(backup_code, destination)
+        if backup_manifest.exists():
+            os.replace(backup_manifest, manifest_destination)
+        if stopped and lifecycle is not None:
+            lifecycle.reload(manifest.name)
         raise
     finally:
+        shutil.rmtree(backup_root, ignore_errors=True)
         temporary.cleanup()
     return {"name": manifest.name, "root": str(root_path), "code": str(destination), "manifest": str(manifest_destination)}
 
@@ -96,15 +159,29 @@ def uninstall_package(name, root="/etc/agent-os/agents"):
     return removed
 
 
-def deploy_package(package, host, root="/etc/agent-os/agents", sudo=True, dry_run=False):
+def deploy_package(package, host, root="/etc/agent-os/agents", sudo=True,
+                   dry_run=False, sdk_wheel=None):
     package = pathlib.Path(package).resolve()
     if not package.is_file():
         raise FileNotFoundError(str(package))
     if not SAFE_REMOTE.fullmatch(host):
         raise ValueError("host contains unsupported characters")
     remote_package = "/tmp/" + package.name
-    install = (["sudo"] if sudo else []) + ["pvos", "install", remote_package, "--root", root]
-    commands = [["scp", str(package), host + ":" + remote_package], ["ssh", host, "--", *install]]
+    prefix = ["sudo"] if sudo else []
+    commands = []
+    if sdk_wheel is not None:
+        wheel = pathlib.Path(sdk_wheel).resolve()
+        if not wheel.is_file() or wheel.suffix != ".whl":
+            raise ValueError("sdk_wheel must point to a built .whl file")
+        remote_wheel = "/tmp/" + wheel.name
+        commands.extend([
+            ["scp", str(wheel), host + ":" + remote_wheel],
+            ["ssh", host, "--", *prefix, "python3", "-m", "pip", "install", "--no-index", remote_wheel],
+        ])
+    else:
+        commands.append(["ssh", host, "--", "command", "-v", "pvos"])
+    install = prefix + ["pvos", "install", remote_package, "--root", root]
+    commands.extend([["scp", str(package), host + ":" + remote_package], ["ssh", host, "--", *install]])
     if not dry_run:
         for command in commands:
             subprocess.run(command, check=True)

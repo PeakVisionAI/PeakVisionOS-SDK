@@ -1,39 +1,58 @@
-# @peakvision/pvos-sdk
+# `@peakvision/pvos-sdk`
 
-For workstation setup, SSH tunneling and an end-to-end Run example, see the
-[Chinese developer quickstart](../docs/developer-quickstart.zh-CN.md).
+TypeScript/Node.js 客户端，用 HTTPS 访问 PeakVisionOS Remote Gateway 控制面。
+要求 Node.js 18+，也可在浏览器环境传入自定义 `fetch`。
 
-TypeScript/Node.js client for the PeakVisionOS remote control plane. Node.js 18+ is
-required because the package uses the built-in `fetch` implementation.
+## 安装与调用
 
 ```bash
 npm install @peakvision/pvos-sdk
 ```
 
 ```ts
-import { PeakVisionOS } from "@peakvision/pvos-sdk";
+import { PeakVisionOS, GatewayError } from "@peakvision/pvos-sdk";
 
-const aos = new PeakVisionOS({
+const client = new PeakVisionOS({
   endpoint: "https://gateway.example/gateway/v1/nodes/node-1/api/v1",
   token: process.env.PVOS_TOKEN,
 });
 
-console.log(await aos.health());
-const run = await aos.createRun("demo");
-console.log(await aos.logs("demo"));
+try {
+  const run = await client.createRun("code-agent", "task-1", "", "", "run-1");
+  console.log(await client.run(run.run_id));
+} catch (error) {
+  if (error instanceof GatewayError) console.error(error.code, error.requestId);
+}
 ```
 
-The client includes bounded exponential retries for idempotent requests,
-explicit idempotency-key support for retryable `createRun` calls, typed
-Workspace/Task/Run/Event results, paged event reads and `iterEvents()`. It
-also covers the complete documented node control plane. Use `RemoteGateway`
-for Gateway node listing, registration, token rotation and snapshots.
+## 覆盖范围
 
-This first release covers health, Agents, Runs, Logs and Events through
-AgentOS `agentosd`/Gateway HTTP APIs. Four system primitives remain local Unix
-Socket APIs until a versioned remote primitive protocol is published.
+`PeakVisionOS` 提供 health、agents、workspaces、tasks、runs、logs、events
+和增量 `iterEvents()`；`RemoteGateway` 额外提供节点注册、令牌轮换和 snapshot。
+请求结果使用 Workspace、Task、Run、RunEvent 等类型，Run status 和错误字段
+保持可编程。
 
-The client also covers Workspaces, Tasks, Run details, Gateway node registry
-operations, bounded retries, idempotency-key Run creation, typed event pages
-and async event iteration. Server-side RBAC, offline queues, certificate
-rotation and remote primitive transport are outside this package.
+每个读取方法和写入方法都可传 `{ signal }`：
+
+```ts
+const controller = new AbortController();
+const pending = client.events(100, 0, { signal: controller.signal });
+controller.abort();
+```
+
+SDK 会把 `code`、`message`、`status`、`retryable`、`requestId`、`details` 和
+`retryAfter` 保留在 `GatewayError` 上。幂等 GET 自动有限重试；POST 只有提供
+`Idempotency-Key` 才允许重试。
+
+## 边界
+
+该包只访问 Remote Gateway，不直接访问节点 Unix Socket，也不提供本地模型、
+沙箱、RBAC、离线队列或证书轮换。需要在节点内开发 Agent，请使用 Python
+`pvos.PeakVisionOS` 或直接阅读 [四个示例](../examples/README.md)。
+
+## 验证
+
+```bash
+npm ci
+npm test
+```

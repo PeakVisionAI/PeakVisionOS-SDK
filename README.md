@@ -1,107 +1,117 @@
 # PeakVisionOS SDK
 
-> 中文开发者入口：[AgentOS SDK 开发者快速开始](docs/developer-quickstart.zh-CN.md)
->
-> Harness 接入：[DeepSeek Harness 接入 AgentOS SDK](docs/deepseek-harness-integration.zh-CN.md)
->
-> 四个可运行样例：[AgentOS SDK Agent 样例](docs/agent-examples.zh-CN.md)
+PeakVisionOS SDK 是端侧智能体的开发与控制工具链。它连接已经运行
+PeakVisionOS 的 Ubuntu 节点，让 ISV 使用熟悉的 Python 或 TypeScript 开发
+Agent，同时通过统一协议启动 Run、读取日志和追踪事件。
 
-AgentOS SDK lets an independent ISV build against an installed AgentOS node
-without cloning or installing the AgentOS daemon source tree. This repository
-publishes two clients from one versioned protocol contract:
+本仓库是 SDK，不是操作系统镜像，也不替代节点上的 `agentd`、`inferd`、
+`memoryd`、`fsd`、`agentrund` 和 `ctxd` 服务。
 
-- `peakvisionos-sdk` on PyPI: local Unix Socket primitives, Agent runtime helpers,
-  Harness adapter, CLI and remote Gateway client.
-- `@peakvision/pvos-sdk` on NPM: TypeScript/Node.js remote Gateway client.
+## 适用场景
 
-## Install
+- 在开发电脑上编写、测试、打包 Agent。
+- 在端侧节点调用本地推理、记忆、语义文件和系统感知能力。
+- 通过 Remote Gateway 管理节点、Workspace、Task、Run、日志和事件。
+- 把 DeepSeek Harness、LangGraph 或自研 Harness 接到稳定工具契约。
+
+## 安装
 
 ```bash
 python3 -m pip install peakvisionos-sdk
 npm install @peakvision/pvos-sdk
 ```
 
-The packages contain client libraries only. The target machine must already
-run AgentOS services for local primitive or Gateway calls.
+Python 导入名是 `pvos`，TypeScript 包名是 `@peakvision/pvos-sdk`。旧的
+`agentos` 导入和 CLI 在 1.x 兼容窗口内保留，新项目请使用新名称。
 
-The Python `GatewayClient` and TypeScript `AgentOS` clients cover the complete
-documented node control plane: health, agents, workspaces, tasks, runs (list,
-create, detail and stop), logs and event pages/iteration. `GatewayRegistryClient`
-(Python) and `RemoteGateway` (TypeScript) cover Gateway node listing,
-registration, token rotation and snapshots.
+## 5 分钟快速开始
 
-The production baseline also includes bounded exponential retries, structured
-HTTP/local transport errors, input validation, idempotency-key support for
-retryable Run creation, typed TypeScript results, and a Python `py.typed`
-marker. These guarantees are covered by the repository contract tests.
+无真实节点时，先运行离线 Mock：
 
-## Choose a transport
+```bash
+pvos mock-server --port 17680 --token dev-token
+pvos acceptance --endpoint http://127.0.0.1:17680/api/v1 --token dev-token
+```
 
-| Use case | Client | Transport | Stable operations |
-| --- | --- | --- | --- |
-| Agent code on an AgentOS node | `pvos.PeakVisionOS` | Unix Socket | agentd, inferd, memoryd, fsd, agentrund, ctxd |
-| Developer workstation, GUI or CI | `pvos.GatewayClient` / TypeScript `PeakVisionOS` | HTTP/HTTPS Gateway | health, agents, runs, logs, events |
-
-The four system primitives are intentionally local-only until a versioned
-Remote Primitive Protocol is released. The Gateway clients must not be used as
-an undocumented proxy for primitive sockets.
-
-## Quick start
+远程控制面：
 
 ```python
 from pvos import GatewayClient
 
 client = GatewayClient(
     endpoint="https://gateway.example/gateway/v1/nodes/node-1/api/v1",
-    token="<short-lived-token>",
+    token="<短期令牌>",
 )
 print(client.health())
-run = client.create_run("code-agent", task_id="task-001")
-print(client.logs("code-agent"))
+run = client.create_run("my-agent", idempotency_key="run-2026-001")
+print(client.run(run["run_id"]))
+print(list(client.iter_events(max_pages=1)))
 ```
 
-For local Agent development, see [Python SDK](python/README.md). For the
-TypeScript client, see [TypeScript SDK](typescript/README.md). Shared contracts
-and compatibility rules are in [protocols](protocol/README.md).
+节点本地 Agent：
 
-## Development and tests
+```python
+import pvos
+
+aos = pvos.PeakVisionOS(caller="my-agent")
+print(aos.system())
+answer = aos.chat("根据当前系统状态给出一句建议")
+aos.memory_write("用户偏好简洁的运行报告")
+print(aos.memory_recall("用户偏好" , top_k=3))
+```
+
+## 两种传输边界
+
+| 位置 | SDK | 传输 | 能力 |
+| --- | --- | --- | --- |
+| AgentOS 节点内 | `pvos.PeakVisionOS` | Unix Socket | 六个本地 daemon；四大原语是 `agentd/inferd/memoryd/fsd` |
+| 开发机、GUI、CI | `pvos.GatewayClient` 或 TS `PeakVisionOS` | HTTP/HTTPS | 控制面资源和运行观测 |
+
+远程客户端目前不代理四大原语。未经版本化的 Unix Socket 路径不能作为公网
+API 使用。
+
+## Agent 生命周期
 
 ```bash
-python3 -m pip install -e ./python
-PYTHONPATH=python python3 tests/test-sdk-http.py
-cd typescript && npm ci && npm test
+pvos new my-agent
+pvos test my-agent
+pvos package my-agent -o my-agent.agent.tgz
+pvos install my-agent.agent.tgz --root /etc/agent-os/agents
+agentrun spawn my-agent
+agentrun status my-agent
+agentrun logs my-agent
 ```
 
-The HTTP contract test uses a standard-library mock server and does not require
-GPU hardware or a running AgentOS node. Real acceptance must still verify Unix
-Socket permissions, Gateway TLS, authorization and Run lifecycle on Ubuntu.
+安装器校验 Manifest、阻止路径穿越和特殊文件，支持 SHA-256/签名验证入口，
+并以代码目录与 Manifest 双文件原子切换；失败会恢复上一版本。
 
-For a complete local flow, run `pvos mock-server` in one terminal and
-`pvos acceptance` in another. See [Mock and acceptance](docs/mock-and-acceptance.zh-CN.md).
+## 文档入口
 
-## Releases
+- [Python SDK](python/README.md)
+- [TypeScript SDK](typescript/README.md)
+- [四个 Agent 示例](examples/README.md)
+- [开发者快速开始](docs/developer-quickstart.zh-CN.md)
+- [API 参考](docs/api-reference.zh-CN.md) 与 [OpenAPI](protocol/openapi.yaml)
+- [Harness Adapter v1](docs/harness-adapter-v1.md)
+- [DeepSeek Harness 接入](docs/deepseek-harness-integration.zh-CN.md)
+- [安全指南](docs/security-guide.zh-CN.md)、[错误与状态机](docs/errors-and-state-machine.zh-CN.md)、[测试指南](docs/testing-guide.zh-CN.md)、[兼容矩阵](docs/compatibility-matrix.zh-CN.md)
+- [P0/P1/P2 就绪矩阵](docs/readiness-matrix.zh-CN.md)
 
-Push an `sdk-v*` tag to run `.github/workflows/publish-sdk.yml`. Python uses
-PyPI Trusted Publishing through GitHub OIDC. NPM uses the repository
-`NPM_TOKEN` secret and publishes provenance metadata. Update both package
-versions together and run CI before tagging.
+## 本地验证
 
-See [standalone SDK release guide](docs/standalone-sdk.md) for credential,
-compatibility and ISV onboarding details.
+```bash
+PYTHONPATH=python python3 tests/test-local-client.py
+PYTHONPATH=python python3 tests/test-sdk-http.py
+PYTHONPATH=python python3 tests/test-pvos-toolchain.py
+cd typescript && npm ci && npm test
+python3 -m build python
+```
 
-开发资料：
+测试不需要 GPU；真实发布前仍必须在目标 Ubuntu 节点验收 Unix Socket 权限、
+TLS/mTLS、真实推理后端、cgroup 和 Run 生命周期。
 
-- [API Reference](docs/api-reference.zh-CN.md) 与 [OpenAPI](protocol/openapi.yaml)
-- [本地 Mock/端到端验收](docs/mock-and-acceptance.zh-CN.md)
-- [开发环境开通](docs/developer-environment.zh-CN.md)
-- [错误与状态机](docs/errors-and-state-machine.zh-CN.md)、[安全](docs/security-guide.zh-CN.md)、[测试](docs/testing-guide.zh-CN.md)
-- [版本兼容](docs/compatibility-matrix.zh-CN.md)、[迁移](docs/migration-pvos.zh-CN.md)、[FAQ](docs/faq.zh-CN.md)
+## 版本边界
 
-New API details are in the [API Reference](docs/api-reference.zh-CN.md), with
-the machine-readable contract in [`protocol/openapi.yaml`](protocol/openapi.yaml).
-
-Release changes are tracked in [CHANGELOG.md](CHANGELOG.md).
-
-This is an SDK client release, not a replacement for the AgentOS operating
-system. Remote primitive calls, offline command queues, multi-tenant RBAC and
-certificate lifecycle management remain server-side or future protocol work.
+`peakvisionos-sdk 1.5.x` 与 Manifest v1、Harness Adapter v1、Control-plane
+HTTP v1 对齐。新增可选字段保持兼容；删除字段、改变状态含义或认证方式需要
+新的协议主版本。SDK 不负责服务端 RBAC、证书轮换、离线队列、强隔离或多租户。

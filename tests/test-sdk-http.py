@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Contract test for the standalone Python GatewayClient."""
+import asyncio
 import json
 import pathlib
 import sys
@@ -7,7 +8,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "python"))
-from agentos import (GatewayClient, GatewayError, GatewayRegistryClient,
+from pvos import (AsyncGatewayClient, GatewayClient, GatewayError, GatewayRegistryClient,
                      GatewayRetryPolicy)  # noqa: E402
 
 
@@ -49,6 +50,15 @@ class Handler(BaseHTTPRequestHandler):
             if Handler.retry_count == 1:
                 return self._send(503, {"error": "temporary"})
             return self._send(200, {"ok": True})
+        if self.path.endswith("/structured-error"):
+            self.send_response(429)
+            raw = json.dumps({"error": {"code": "rate_limited", "message": "slow down",
+                                         "details": {"limit": 10}, "retry_after": 2}}).encode()
+            self.send_header("Content-Type", "application/json")
+            self.send_header("X-Request-Id", "req-123")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            return self.wfile.write(raw)
         return self._send(404, {"error": "not found"})
 
     def do_POST(self):  # noqa: N802
@@ -87,6 +97,18 @@ assert client.events()[0]["type"] == "run.completed"
 assert client.events_page()["events"]
 assert list(client.iter_events(max_pages=1))
 assert client._request("GET", "retry")["ok"] is True
+try:
+    client._request("GET", "structured-error")
+except GatewayError as exc:
+    assert exc.code == "rate_limited"
+    assert exc.message == "slow down"
+    assert exc.status == 429
+    assert exc.retryable is True
+    assert exc.request_id == "req-123"
+    assert exc.details == {"limit": 10}
+    assert exc.retry_after == 2
+else:
+    raise AssertionError("structured HTTP errors must remain machine-readable")
 registry = GatewayRegistryClient(
     f"http://127.0.0.1:{server.server_port}/gateway/v1",
     token="test-token",
@@ -95,6 +117,19 @@ registry = GatewayRegistryClient(
 assert registry.nodes()[0]["node_id"] == "node-1"
 assert registry.register_node("node-2", "new", "http://node", "secret")["node_id"] == "node-2"
 assert registry.snapshot("node-1")["health"]["ok"] is True
+
+
+async def check_async_parity():
+    async_client = AsyncGatewayClient(
+        f"http://127.0.0.1:{server.server_port}/gateway/v1",
+        token="test-token",
+        retry_policy=GatewayRetryPolicy(backoff_seconds=0),
+    )
+    assert (await async_client.nodes())[0]["node_id"] == "node-1"
+    assert (await async_client.snapshot("node-1"))["health"]["ok"] is True
+
+
+asyncio.run(check_async_parity())
 try:
     client.create_run("")
 except ValueError:

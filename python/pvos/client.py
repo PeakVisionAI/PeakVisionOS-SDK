@@ -79,7 +79,12 @@ def _call(key, line, timeout=DEFAULT_TIMEOUT, raw=False, body=None):
     if not data:
         return {}
     try:
-        return json.loads(data.decode("utf-8"))
+        value = json.loads(data.decode("utf-8"))
+        if isinstance(value, dict) and value.get("error"):
+            error = value["error"]
+            detail = error.get("message", "local request failed") if isinstance(error, dict) else str(error)
+            raise PVOSClientError(detail)
+        return value
     except json.JSONDecodeError:
         return {"_raw": data.decode("utf-8", errors="replace")}
 
@@ -114,22 +119,22 @@ class PeakVisionOS:
         """世界快照:主机/内核/负载等概览。"""
         return _call("agent", "world")
 
-    def system(self):
+    def system(self, timeout=DEFAULT_TIMEOUT):
         """系统资源:内存/CPU 等数字。"""
-        return _call("agent", "system")
+        return _call("agent", "system", timeout=timeout)
 
     def processes(self):
         """当前进程列表。"""
         return _call("agent", "processes")
 
     # -- 认知 inferd ----------------------------------------------------
-    def chat(self, prompt):
+    def chat(self, prompt, timeout=DEFAULT_TIMEOUT):
         """与当前模型对话,返回 {response, tokens_in, tokens_out, ...}。"""
-        return _call("infer", self._line("chat", prompt, infer=True))
+        return _call("infer", self._line("chat", prompt, infer=True), timeout=timeout)
 
-    def embed(self, text):
+    def embed(self, text, timeout=DEFAULT_TIMEOUT):
         """文本转向量(语义召回的向量来源)。"""
-        return _call("infer", self._line("embed", text, infer=True))
+        return _call("infer", self._line("embed", text, infer=True), timeout=timeout)
 
     def models(self):
         """列出可用模型。"""
@@ -152,19 +157,24 @@ class PeakVisionOS:
         return _call("infer", "sched")
 
     # -- 记忆 memoryd ---------------------------------------------------
-    def memory_write(self, text):
+    def memory_write(self, text, timeout=DEFAULT_TIMEOUT):
         """写入一条长期记忆。"""
-        return _call("memory", self._line("write", text))
+        return _call("memory", self._line("write", text), timeout=timeout)
 
     def memory_set(self, key, text):
         """写单值槽位(旧 active 同 key 自动 superseded,版本链)。"""
         return _call("memory", self._line("set", key, text))
 
-    def memory_recall(self, query, top_k=5):
+    def memory_recall(self, query, top_k=5, timeout=DEFAULT_TIMEOUT):
         """按意思召回相关记忆。"""
         if not isinstance(top_k, int) or top_k < 1:
             raise ValueError("top_k must be a positive integer")
-        return _call("memory", self._line("recall", query, top_k))
+        result = _call("memory", self._line("recall", query), timeout=timeout)
+        if isinstance(result, dict) and isinstance(result.get("hits"), list):
+            result = dict(result)
+            result["hits"] = result["hits"][:top_k]
+            result["count"] = len(result["hits"])
+        return result
 
     def memory_list(self, all_=False):
         """列出记忆(默认只列 active;all_=True 含 superseded/rejected)。"""
@@ -179,15 +189,15 @@ class PeakVisionOS:
         return _call("memory", self._line("history", key))
 
     # -- 语义文件 fsd ----------------------------------------------------
-    def fs_put(self, name, text):
+    def fs_put(self, name, text, timeout=DEFAULT_TIMEOUT):
         """存入一段文本(内容寻址 + 抽向量),返回 {id, dedup, embed}。"""
         data = text.encode("utf-8")
         head = "put %s %d" % (_clean(name), len(data))
-        return _call("fs", head, body=data)
+        return _call("fs", head, timeout=timeout, body=data)
 
-    def fs_search(self, query, top_k=5):
+    def fs_search(self, query, top_k=5, timeout=DEFAULT_TIMEOUT):
         """按意思召回最相关的文件。"""
-        return _call("fs", self._line("search", top_k, query))
+        return _call("fs", self._line("search", top_k, query), timeout=timeout)
 
     def fs_get(self, fid):
         """按 id 取回原始字节(bytes)。"""

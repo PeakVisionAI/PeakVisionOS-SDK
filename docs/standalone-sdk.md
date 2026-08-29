@@ -8,7 +8,7 @@ here.
 ## Repository layout
 
 ```text
-python/       Python package and agentos CLI
+python/       Python package and pvos CLI (agentos remains a 1.x alias)
 typescript/   TypeScript/NPM package
 protocol/     Versioned public contract index
 docs/         Manifest, Harness and Gateway contract details
