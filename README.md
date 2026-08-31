@@ -104,6 +104,31 @@ agentrun logs my-agent
 
 安装器会校验 Manifest，拒绝路径穿越、链接和特殊文件，并在部署失败时恢复上一版本。生产部署应额外启用摘要或签名校验，并定义停止、升级和回滚策略。
 
+也可以从开发机通过 SSH 一步部署。目标机未安装 SDK 时，先构建 wheel 并用
+`--sdk-wheel` 上传；Ubuntu 24.04 的 PEP 668 环境会自动使用
+`--break-system-packages` 安装到系统 Python，保证 systemd 托管的 Agent 也能导入
+`pvos`：
+
+```bash
+python -m build python
+pvos deploy my-agent.agent.tgz user@agentos-host \
+  --sdk-wheel python/dist/peakvisionos_sdk-1.5.0a1-py3-none-any.whl
+```
+
+在交互式终端中，部署会自动分配 SSH TTY，并提示输入目标机的 sudo 密码。CI 或无
+终端脚本请使用 `--no-tty`，并在目标机为部署用户配置最小范围的 NOPASSWD sudo；
+命令不会通过参数或环境变量接收 sudo 密码：
+
+```bash
+pvos deploy my-agent.agent.tgz user@agentos-host \
+  --sdk-wheel python/dist/peakvisionos_sdk-1.5.0a1-py3-none-any.whl \
+  --no-tty
+```
+
+部署失败时，先运行 `pvos deploy ... --dry-run` 检查命令，再确认 SSH 登录、目标机
+`python3`/pip 和 sudo 策略。部署器使用 `python3 -m pvos.cli`，不依赖目标机的
+`pvos` 可执行文件是否在 PATH 中。
+
 ### 连接 Remote Gateway
 
 ```python
@@ -213,4 +238,3 @@ Mock 和合约测试证明 SDK 的请求、响应和工具链契约，不证明�
 ## 许可证
 
 Apache-2.0，详见 [LICENSE](LICENSE)。
-

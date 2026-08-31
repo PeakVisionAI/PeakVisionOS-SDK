@@ -11,7 +11,7 @@
 | P1 | HTTP 错误不可编程 | 已修复 | `GatewayError`/TS `GatewayError` 暴露 code、message、status、retryable、request id、details |
 | P1 | Async API 不对齐 | 已修复 | events_page、iter_events、nodes、注册、轮换、snapshot；取消语义写入文档 |
 | P1 | 包安装不具备回滚/边界 | 已修复 | 包大小/文件类型/路径校验、摘要/签名入口、权限、代码+Manifest 回滚 |
-| P1 | 远程部署依赖目标机已有 pvos | 已缓解 | `pvos deploy --sdk-wheel` 支持先上传 wheel；无 wheel 时显式探测并失败 |
+| P1 | 远程部署依赖目标机已有 pvos | 已修复 | `pvos deploy --sdk-wheel` 上传 wheel 并通过 `python3 -m pvos.cli` 安装；交互式 SSH 自动分配 TTY，Ubuntu PEP 668 使用 `--break-system-packages`；CI 可用 `--no-tty` + NOPASSWD sudo |
 | P1 | Harness 工具边界不清 | 已修复 | 工具 Schema、白名单、审批、单工具 timeout、事件记录/回放 |
 | P2 | README/协议分散和旧命名 | 已修复 | 根 README、语言 README、示例 README、协议 README、`docs/README.md` 统一入口 |
 | P2 | 真实节点能力 | 未由 SDK 单独解决 | Ubuntu/AMD395 仍需验收 TLS/mTLS、真实推理、cgroup、权限和 Run 生命周期 |

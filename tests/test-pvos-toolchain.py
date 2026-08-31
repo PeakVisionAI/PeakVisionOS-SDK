@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "python"))
 import pvos  # noqa: E402
 from pvos.acceptance import run_acceptance  # noqa: E402
 from pvos.mock_server import create_mock_server  # noqa: E402
-from pvos.package_manager import install_package, uninstall_package  # noqa: E402
+from pvos.package_manager import deploy_package, install_package, uninstall_package  # noqa: E402
 
 
 server = create_mock_server(port=0, token="dev-token")
@@ -58,6 +58,23 @@ with tempfile.TemporaryDirectory(prefix="pvos-test-") as temp:
     assert (install_root / "knowledge-docs-agent" / "agent.py").read_bytes() == original_source
     assert (install_root / "knowledge-docs-agent.agent").read_bytes() == original_manifest
     assert uninstall_package("knowledge-docs-agent", install_root)
+
+    wheel = temp / "peakvisionos_sdk.whl"
+    wheel.write_bytes(b"test wheel")
+    with mock.patch("pvos.package_manager.subprocess.run") as run:
+        commands = deploy_package(
+            bundle,
+            "qwer@example",
+            sdk_wheel=wheel,
+            dry_run=False,
+            tty=False,
+        )
+    assert commands[1] == [
+        "ssh", "qwer@example", "--", "sudo", "-n", "-H", "python3", "-m", "pip",
+        "install", "--no-index", "--break-system-packages", "/tmp/peakvisionos_sdk.whl",
+    ]
+    assert commands[-1][-4:] == ["install", "/tmp/demo.agent.tgz", "--root", "/etc/agent-os/agents"]
+    assert [call.args[0] for call in run.call_args_list] == commands
 
 server.shutdown()
 print("PeakVisionOS toolchain contract: OK")
