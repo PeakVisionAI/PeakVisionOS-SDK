@@ -75,6 +75,30 @@ pvos package my-agent
 pvos inspect my-agent
 ```
 
+### SSH 远程部署
+
+目标机是 Ubuntu 24.04 等启用 PEP 668 的系统时，使用 `--sdk-wheel` 上传本地构建
+的 SDK wheel。交互式终端默认分配 SSH TTY，远端 `sudo` 会正常提示密码：
+
+```bash
+python -m build python
+pvos deploy my-agent.agent.tgz user@agentos-host \
+  --sdk-wheel python/dist/peakvisionos_sdk-1.5.0a1-py3-none-any.whl
+```
+
+无终端的 CI 使用 `--no-tty`，要求部署用户已配置最小权限的 NOPASSWD sudo。SDK
+不会接收或保存 sudo 密码；`--dry-run` 可用于审查将执行的 SSH 命令：
+
+```bash
+pvos deploy my-agent.agent.tgz user@agentos-host \
+  --sdk-wheel python/dist/peakvisionos_sdk-1.5.0a1-py3-none-any.whl \
+  --no-tty --dry-run
+```
+
+部署器通过 `python3 -m pvos.cli install` 安装 Agent，因此不要求 `pvos` 命令已经
+出现在目标机 PATH 中。`--sdk-wheel` 安装完成后会重用系统 Python，systemd 启动的
+Agent 可以直接 `import pvos`。
+
 Manifest 的 `primitives=` 是最小权限声明；安装器默认拒绝链接、特殊文件和
 超大包。生产环境应传入 `expected_sha256` 或 `signature_verifier`，并在升级前
 确认停止/重新加载策略。

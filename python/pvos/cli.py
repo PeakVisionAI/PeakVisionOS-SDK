@@ -334,7 +334,15 @@ def cmd_uninstall(args):
 def cmd_deploy(args):
     from .package_manager import deploy_package
     try:
-        commands = deploy_package(args.package, args.host, args.root, not args.no_sudo, args.dry_run, args.sdk_wheel)
+        commands = deploy_package(
+            args.package,
+            args.host,
+            args.root,
+            not args.no_sudo,
+            args.dry_run,
+            args.sdk_wheel,
+            tty=False if args.no_tty else None,
+        )
     except Exception as exc:
         print(f"部署失败: {exc}", file=sys.stderr)
         return 1
@@ -414,6 +422,11 @@ def main(argv=None):
     p.add_argument("host")
     p.add_argument("--root", default="/etc/agent-os/agents")
     p.add_argument("--no-sudo", action="store_true")
+    p.add_argument(
+        "--no-tty",
+        action="store_true",
+        help="不分配 SSH TTY；适用于已配置免密 sudo 的 CI/自动化环境",
+    )
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--sdk-wheel", help="目标机未安装 SDK 时，先上传并安装本地 .whl")
     p.set_defaults(func=cmd_deploy)

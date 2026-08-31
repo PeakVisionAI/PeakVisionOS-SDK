@@ -7,6 +7,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 
@@ -159,15 +160,34 @@ def uninstall_package(name, root="/etc/agent-os/agents"):
     return removed
 
 
+def _remote_command(host, args, sudo=True, tty=None):
+    """Build an SSH command that works both from a terminal and from CI.
+
+    Interactive deployments need a remote TTY for sudo to ask for a password.
+    Non-interactive callers use ``sudo -n`` so they fail immediately instead of
+    hanging; those callers can provision a narrowly scoped NOPASSWD rule.
+    """
+    if not sudo:
+        return ["ssh", host, "--", *args]
+    if tty is None:
+        tty = bool(sys.stdin.isatty())
+    ssh = ["ssh"]
+    sudo_args = ["sudo", "-H"]
+    if tty:
+        ssh.append("-tt")
+    else:
+        sudo_args.insert(1, "-n")
+    return [*ssh, host, "--", *sudo_args, *args]
+
+
 def deploy_package(package, host, root="/etc/agent-os/agents", sudo=True,
-                   dry_run=False, sdk_wheel=None):
+                   dry_run=False, sdk_wheel=None, tty=None):
     package = pathlib.Path(package).resolve()
     if not package.is_file():
         raise FileNotFoundError(str(package))
     if not SAFE_REMOTE.fullmatch(host):
         raise ValueError("host contains unsupported characters")
     remote_package = "/tmp/" + package.name
-    prefix = ["sudo"] if sudo else []
     commands = []
     if sdk_wheel is not None:
         wheel = pathlib.Path(sdk_wheel).resolve()
@@ -176,12 +196,21 @@ def deploy_package(package, host, root="/etc/agent-os/agents", sudo=True,
         remote_wheel = "/tmp/" + wheel.name
         commands.extend([
             ["scp", str(wheel), host + ":" + remote_wheel],
-            ["ssh", host, "--", *prefix, "python3", "-m", "pip", "install", "--no-index", remote_wheel],
+            _remote_command(
+                host,
+                ["python3", "-m", "pip", "install", "--no-index",
+                 "--break-system-packages", remote_wheel],
+                sudo=sudo,
+                tty=tty,
+            ),
         ])
     else:
-        commands.append(["ssh", host, "--", "command", "-v", "pvos"])
-    install = prefix + ["pvos", "install", remote_package, "--root", root]
-    commands.extend([["scp", str(package), host + ":" + remote_package], ["ssh", host, "--", *install]])
+        commands.append(["ssh", host, "--", "python3", "-c", "import pvos"])
+    install = ["python3", "-m", "pvos.cli", "install", remote_package, "--root", root]
+    commands.extend([
+        ["scp", str(package), host + ":" + remote_package],
+        _remote_command(host, install, sudo=sudo, tty=tty),
+    ])
     if not dry_run:
         for command in commands:
             subprocess.run(command, check=True)

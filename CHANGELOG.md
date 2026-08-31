@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Improved `pvos deploy`: interactive SSH deployments allocate a TTY for remote
+  sudo, non-interactive CI can use `--no-tty` with NOPASSWD sudo, Ubuntu PEP 668
+  targets accept `--break-system-packages`, and Agent installation uses
+  `python3 -m pvos.cli` instead of relying on a `pvos` executable in PATH.
 - Renamed the public Python product surface to PeakVisionOS: `peakvisionos-sdk`
   and `pvos`; legacy `agentos` imports/CLI remain aliases. The TypeScript
   control-plane client remains available from source and is not published to NPM.
