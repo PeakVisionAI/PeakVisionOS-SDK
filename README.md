@@ -223,6 +223,16 @@ cd typescript && npm ci && npm test
 python -m build python
 ```
 
+发布前可运行一键门禁脚本：
+
+```bash
+./scripts/release-gate.sh
+```
+
+它会执行全部 Python 合约测试、编译和构建。设置
+`PVOS_GATEWAY_ENDPOINT`（以及可选的 `PVOS_TOKEN`、`PVOS_AGENT`、`PVOS_TIMEOUT`）
+后，会追加真实 Gateway acceptance；脚本只读远端状态，不负责部署或重启服务。
+
 Mock 和合约测试证明 SDK 的请求、响应和工具链契约，不证明真实推理后端、硬件加速、cgroup/namespace 隔离、TLS/mTLS 或生产数据策略。发布前必须在目标 Ubuntu/PeakVisionOS 节点执行真机验收。
 
 ## 版本与兼容性
